@@ -1,10 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const generateResponse = async (message) => {
+const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+});
 
-    const ai = new GoogleGenAI({
-        apiKey: process.env.GEMINI_API_KEY
-    });
+
+export const generateResponse = async (message) => {
 
     const response = await ai.models.generateContent({
         model: "gemini-3.5-flash-lite",
@@ -12,4 +13,42 @@ export const generateResponse = async (message) => {
     });
 
     return response.text;
+};
+
+
+export const extractRequirements = async (text) => {
+
+    const prompt = `
+You are a technical procurement requirement extraction assistant.
+
+Analyze the procurement description below.
+
+Extract ONLY information that is explicitly present
+or strongly implied by the provided description.
+
+Return ONLY valid JSON.
+Do not add markdown.
+Do not add explanations.
+
+Use exactly this structure:
+
+{
+    "product": "string",
+    "application": "string or null",
+    "technicalParameters": {},
+    "keywords": []
+}
+
+Procurement description:
+${text}
+`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash-lite",
+        contents: prompt
+    });
+
+    const textResponse = response.text.trim();
+
+    return JSON.parse(textResponse);
 };

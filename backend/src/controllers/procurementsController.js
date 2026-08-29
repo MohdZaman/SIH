@@ -1,4 +1,5 @@
 import Procurement from "../models/procurementsModel.js";
+import { analyzeProcurement  } from "../services/analysisServices.js";
 
 const createProcurement = async(req,res)=>{
    try {
@@ -69,4 +70,30 @@ const getProcurementById = async(req,res)=>{
         
     }
 }
-export {createProcurement,getProcurement,getProcurementById}
+const analyzeProcurementController = async (req, res) => {
+
+    try {
+
+        const requirement = await analyzeProcurement(
+            req.params.id
+        );
+
+        return res.status(200).json({
+            success: true,
+            requirement
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Procurement analysis error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Procurement analysis failed"
+        });
+    }
+};
+export {createProcurement,getProcurement,getProcurementById,analyzeProcurementController}
