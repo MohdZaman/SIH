@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 import chatRouter from './src/routes/chatRoutes.js'
 import procurementRouter from './src/routes/procurementRoutes.js'
+import standardRouter from './src/routes/standardRoutes.js'
 
 
 
@@ -18,4 +19,5 @@ app.get('/',(req,res)=>{
 })
 app.use('/api/chat',chatRouter)
 app.use('/api/procurement',procurementRouter)
+app.use('/api/standard',standardRouter)
 export default app
