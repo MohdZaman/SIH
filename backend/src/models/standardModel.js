@@ -15,25 +15,24 @@ const standardSchema = new mongoose.Schema(
             trim: true
         },
 
-        description: {
-            type: String,
-            default: ""
-        },
-
         category: {
             type: String,
-            default: ""
+            default: null
         },
 
-        status: {
+        subcategory: {
             type: String,
-            enum: ["ACTIVE", "WITHDRAWN", "SUPERSEDED"],
-            default: "ACTIVE"
+            default: null
         },
 
-        latestVersion: {
+        description: {
             type: String,
-            default: ""
+            default: null
+        },
+
+        source: {
+            type: String,
+            default: null
         },
 
         keywords: {
@@ -41,19 +40,15 @@ const standardSchema = new mongoose.Schema(
             default: []
         },
 
-        relatedStandards: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Standard"
-            }
-        ],
+        status: {
+            type: String,
+            default: "ACTIVE"
+        },
 
-        testStandards: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Standard"
-            }
-        ]
+        latestVersion: {
+            type: String,
+            default: null
+        }
     },
     {
         timestamps: true

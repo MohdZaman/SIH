@@ -96,4 +96,31 @@ const analyzeProcurementController = async (req, res) => {
         });
     }
 };
-export {createProcurement,getProcurement,getProcurementById,analyzeProcurementController}
+const deleteProcurement = async (req, res) => {
+    try {
+        const procurement = await Procurement.findByIdAndDelete(
+            req.params.id
+        );
+
+        if (!procurement) {
+            return res.status(404).json({
+                success: false,
+                message: "Procurement not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Procurement deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete procurement error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete procurement"
+        });
+    }
+};
+export {createProcurement,getProcurement,getProcurementById,analyzeProcurementController,deleteProcurement}

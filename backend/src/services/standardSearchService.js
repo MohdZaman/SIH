@@ -1,26 +1,27 @@
 import Standard from "../models/standardModel.js";
 
 const searchStandards = async (query) => {
+
     if (!query || !query.trim()) {
         return [];
     }
 
-    const words = query
-        .toLowerCase()
+    const keywords = query
         .trim()
-        .split(/\s+/);
-
-    const regexQueries = words.map(word => new RegExp(word, "i"));
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
 
     const standards = await Standard.find({
-        $or: regexQueries.flatMap(regex => [
-            { code: regex },
-            { title: regex },
-            { description: regex },
-            { category: regex },
-            { keywords: regex }
+        $or: keywords.flatMap(keyword => [
+            { code: { $regex: keyword, $options: "i" } },
+            { title: { $regex: keyword, $options: "i" } },
+            { description: { $regex: keyword, $options: "i" } },
+            { category: { $regex: keyword, $options: "i" } },
+            { subcategory: { $regex: keyword, $options: "i" } },
+            { keywords: { $regex: keyword, $options: "i" } }
         ])
-    }).limit(20);
+    });
 
     return standards;
 };
