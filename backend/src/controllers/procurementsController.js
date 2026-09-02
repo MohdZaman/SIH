@@ -1,8 +1,11 @@
 import Procurement from "../models/procurementsModel.js";
+import mongoose from "mongoose";
 import { analyzeProcurement  } from "../services/analysisServices.js";
 import Requirement from "../models/requirementModel.js";
 import Recommendation from "../models/recommendationModel.js";
 import Standard from "../models/standardModel.js";
+import Evidence from "../models/evidenceModel.js";
+import { getProcurementGraph } from "../services/procurementGraphService.js";
 
 const createProcurement = async(req,res)=>{
    try {
@@ -215,5 +218,198 @@ const getDashboardSummary = async (req, res) => {
     });
   }
 };
+
+// ======================================================
+// GET PROCUREMENT EVIDENCE
+// ======================================================
+
+const getProcurementEvidence = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+
+        // Validate procurement ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Invalid procurement ID"
+
+            });
+
+        }
+
+
+        // Check procurement exists
+        const procurement =
+            await Procurement.findById(id);
+
+
+        if (!procurement) {
+
+            return res.status(404).json({
+
+                success: false,
+                message: "Procurement not found"
+
+            });
+
+        }
+
+
+        // Find recommendations for this procurement
+        const recommendations =
+            await Recommendation.find({
+
+                procurement: procurement._id
+
+            }).select(
+                "_id code title relevanceScore standard"
+            );
+
+
+        const recommendationIds =
+            recommendations.map(
+                (recommendation) =>
+                    recommendation._id
+            );
+
+
+        // Find evidence
+        const evidence =
+            await Evidence.find({
+
+                recommendation: {
+                    $in: recommendationIds
+                }
+
+            })
+                .populate(
+                    "standard",
+                    "code title standardFamily version source"
+                )
+                .populate(
+                    "recommendation",
+                    "code title relevanceScore"
+                )
+                .sort({
+                    createdAt: -1
+                });
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            procurementId:
+                procurement._id,
+
+            count:
+                evidence.length,
+
+            evidence
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Get procurement evidence error:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to fetch procurement evidence"
+
+        });
+
+    }
+
+};
+
+const getProcurementGraphController = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Invalid procurement ID"
+            });
+        }
+
+        const procurement =
+            await Procurement.findById(id);
+
+        if (!procurement) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Procurement not found"
+            });
+        }
+
+        let depth =
+            parseInt(
+                req.query.depth || "1",
+                10
+            );
+
+        if (!Number.isFinite(depth)) {
+            depth = 1;
+        }
+
+        depth = Math.min(
+            Math.max(depth, 1),
+            3
+        );
+
+        const graph =
+            await getProcurementGraph(
+                procurement._id,
+                depth
+            );
+
+        return res.status(200).json({
+
+            success: true,
+
+            procurement: {
+                _id: procurement._id,
+                title: procurement.title,
+                description: procurement.description,
+                status: procurement.status
+            },
+
+            depth,
+
+            graph
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Procurement graph error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch procurement graph"
+        });
+    }
+};
 export {createProcurement,getProcurement,getProcurementById,analyzeProcurementController,
-    deleteProcurement,getRecommendations,getDashboardSummary}
+    deleteProcurement,getRecommendations,getDashboardSummary,getProcurementEvidence,getProcurementGraphController}
