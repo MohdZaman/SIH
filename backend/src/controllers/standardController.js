@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import Procurement from "../models/procurementsModel.js";
 import Requirement from "../models/requirementModel.js";
 import Standard from "../models/standardModel.js";
-
+import Recommendation from "../models/recommendationModel.js";
 import { searchStandards } from "../services/standardSearchService.js";
 
 import {
@@ -384,11 +384,34 @@ const recommendStandard = async (req, res) => {
 
 
         // Sort by relevance
-        recommendations.sort(
-            (a, b) =>
-                b.relevanceScore -
-                a.relevanceScore
-        );
+       recommendations.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+// Remove old recommendations for this procurement
+await Recommendation.deleteMany({
+  procurement: procurement._id
+});
+
+// Save new recommendations
+const recommendationDocuments = recommendations.map((rec) => ({
+  procurement: procurement._id,
+  requirement: requirement._id,
+  standard: rec.standardId,
+  code: rec.code,
+  title: rec.title,
+  category: rec.category,
+  subcategory: rec.subcategory,
+  latestVersion: rec.latestVersion,
+  status: rec.status,
+  similarityScore: rec.similarityScore,
+  relevanceScore: rec.relevanceScore,
+  productMatch: rec.productMatch,
+  applicationMatch: rec.applicationMatch,
+  technicalMatch: rec.technicalMatch,
+  missingRequirements: rec.missingRequirements,
+  reason: rec.reason
+}));
+
+await Recommendation.insertMany(recommendationDocuments);
 
 
         return res.status(200).json({

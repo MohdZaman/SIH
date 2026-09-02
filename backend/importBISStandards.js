@@ -30,45 +30,76 @@ const importBISStandards = async () => {
         console.log(`Found ${rows.length} BIS standards`);
 
 
-        const standards = rows.map((row) => {
+       const standards = rows.map((row) => {
 
-            const code = row["IS Code"];
-            const title = row["Title"];
-            const category = row["Category"];
-            const subcategory = row["Subcategory"];
-            const scope = row["Scope"];
-            const source = row["Source"];
+    const code = String(row["IS Code"] || "").trim();
+    const title = String(row["Title"] || "").trim();
+    const category = String(row["Category"] || "").trim();
+    const subcategory = String(row["Subcategory"] || "").trim();
+    const scope = String(row["Scope"] || "").trim();
+    const source = String(row["Source"] || "").trim();
+
+    // Extract version/year from the IS code
+    // Examples:
+    // IS 1786:2008              → family: IS 1786, version: 2008
+    // IS 432 (Part 1):1982     → family: IS 432 (Part 1), version: 1982
+    // IS 1786                  → family: IS 1786, version: null
+
+    const versionMatch = code.match(/:(\d{4})$/);
+
+    const version = versionMatch
+        ? versionMatch[1]
+        : null;
+
+    const standardFamily = versionMatch
+        ? code.replace(/:\d{4}$/, "").trim()
+        : code;
 
 
-            // Create searchable keywords
-            const keywords = [
-                code,
-                title,
-                category,
-                subcategory
-            ]
-                .filter(Boolean)
-                .join(" ")
-                .split(/\s+/)
-                .filter(Boolean);
+    // Create cleaner searchable keywords
+    const keywords = [
+        code,
+        title,
+        category,
+        subcategory
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .split(/\s+/)
+        .map(word => word.replace(/[—,:;()]/g, "").trim())
+        .filter(word => word.length > 2)
+        .filter(word => ![
+            "and",
+            "for",
+            "the",
+            "of",
+            "in",
+            "to",
+            "with",
+            "used"
+        ].includes(word.toLowerCase()));
 
 
-            return {
-                code,
-                title,
-                category,
-                subcategory,
+    return {
+        code,
+        title,
 
-                // Excel Scope → MongoDB description
-                description: scope,
+        standardFamily,
+        version,
 
-                source,
+        category,
+        subcategory,
 
-                keywords,
+        // Excel Scope → MongoDB description
+        description: scope,
 
-                status: "ACTIVE"
-            };
-        });
+        source,
+
+        keywords,
+
+        status: "ACTIVE"
+    };
+});
 
 
         // Insert / update standards
@@ -77,11 +108,11 @@ const importBISStandards = async () => {
             await Standard.findOneAndUpdate(
                 { code: standard.code },
                 standard,
-                {
-                    upsert: true,
-                    new: true,
-                    setDefaultsOnInsert: true
-                }
+              {
+    upsert: true,
+    returnDocument: "after",
+    setDefaultsOnInsert: true
+}
             );
 
         }
