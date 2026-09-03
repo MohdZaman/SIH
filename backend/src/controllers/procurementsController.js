@@ -77,12 +77,17 @@ const getProcurementById = async(req,res)=>{
     }
 }
 const analyzeProcurementController = async (req, res) => {
-
     try {
+        const { id } = req.params;
 
-        const requirement = await analyzeProcurement(
-            req.params.id
-        );
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid procurement ID"
+            });
+        }
+
+        const requirement = await analyzeProcurement(id);
 
         return res.status(200).json({
             success: true,
@@ -90,7 +95,6 @@ const analyzeProcurementController = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error(
             "Procurement analysis error:",
             error
