@@ -1,23 +1,31 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-dotenv.config()
-import chatRouter from './src/routes/chatRoutes.js'
-import procurementRouter from './src/routes/procurementRoutes.js'
-import standardRouter from './src/routes/standardRoutes.js'
+import express from "express";
+import cors from "cors";
 
+const app = express();
 
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://YOUR-FRONTEND-VERCEL-DOMAIN.vercel.app"
+];
 
-const app = express()
-app.use(cors())
-app.use(express.json())
-app.get('/',(req,res)=>{
-    res.json({
-        success:true,
-        message:"BIS intelligence AI backend is working"
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            // Allow requests without an origin
+            // (Postman, server-to-server, etc.)
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true
     })
-})
-app.use('/api/chat',chatRouter)
-app.use('/api/procurement',procurementRouter)
-app.use('/api/standard',standardRouter)
-export default app
+);
+
+app.use(express.json());
