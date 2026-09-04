@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import './App.css'
+import Login from './components/Login'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <div className='bg-teal-500 hover:blue-300 text-white'>Hello</div>
+    <Login />
     </>
   )
 }
