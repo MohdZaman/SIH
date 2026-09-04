@@ -14,17 +14,9 @@ const generateToken = (user) => {
         }
     );
 };
-
-
-// ===============================
-// REGISTER
-// ===============================
-
 export const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-
-        // Validation
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -38,11 +30,7 @@ export const register = async (req, res) => {
                 message: "Password must be at least 6 characters"
             });
         }
-
-        // Normalize email
         const normalizedEmail = email.toLowerCase().trim();
-
-        // Check existing user
         const existingUser = await User.findOne({
             email: normalizedEmail
         });
@@ -53,18 +41,13 @@ export const register = async (req, res) => {
                 message: "An account with this email already exists"
             });
         }
-
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
-
-        // Create user
         const user = await User.create({
             name: name.trim(),
             email: normalizedEmail,
             password: hashedPassword
         });
 
-        // Generate JWT
         const token = generateToken(user);
 
         return res.status(201).json({
@@ -89,11 +72,6 @@ export const register = async (req, res) => {
     }
 };
 
-
-// ===============================
-// LOGIN
-// ===============================
-
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -107,7 +85,6 @@ export const login = async (req, res) => {
 
         const normalizedEmail = email.toLowerCase().trim();
 
-        // Explicitly select password because schema has select:false
         const user = await User.findOne({
             email: normalizedEmail
         }).select("+password");
@@ -119,7 +96,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Compare password
         const isPasswordCorrect = await bcrypt.compare(
             password,
             user.password
@@ -132,7 +108,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Generate JWT
         const token = generateToken(user);
 
         return res.status(200).json({
@@ -156,11 +131,6 @@ export const login = async (req, res) => {
         });
     }
 };
-
-
-// ===============================
-// GET CURRENT USER
-// ===============================
 
 export const getMe = async (req, res) => {
     try {
