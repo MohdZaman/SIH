@@ -7,14 +7,11 @@ dotenv.config();
 import chatRouter from "./src/routes/chatRoutes.js";
 import procurementRouter from "./src/routes/procurementRoutes.js";
 import standardRouter from "./src/routes/standardRoutes.js";
+import authRouter from './src/routes/authRoutes.js'
 
 const app = express();
 
-/*
-|--------------------------------------------------------------------------
-| CORS Configuration
-|--------------------------------------------------------------------------
-*/
+
 
 const allowedOrigins = [
     "http://localhost:3000",
@@ -30,8 +27,7 @@ app.use(
     cors({
         origin: (origin, callback) => {
 
-            // Allow requests with no origin
-            // (Postman, server-to-server requests, etc.)
+           
             if (!origin) {
                 return callback(null, true);
             }
@@ -64,19 +60,10 @@ app.use(
     })
 );
 
-/*
-|--------------------------------------------------------------------------
-| Middleware
-|--------------------------------------------------------------------------
-*/
+
 
 app.use(express.json());
 
-/*
-|--------------------------------------------------------------------------
-| Health Check
-|--------------------------------------------------------------------------
-*/
 
 app.get("/", (req, res) => {
     res.json({
@@ -85,22 +72,15 @@ app.get("/", (req, res) => {
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
+
 
 app.use("/api/chat", chatRouter);
 
 app.use("/api/procurement", procurementRouter);
 
 app.use("/api/standard", standardRouter);
+app.use('/api/auth',authRouter)
 
-/*
-|--------------------------------------------------------------------------
-| Export App
-|--------------------------------------------------------------------------
-*/
+
 
 export default app;
