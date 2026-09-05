@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#161B26"/>
+  <rect x="2" y="2" width="116" height="116" rx="22" stroke="#2563EB" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Geometric Grid Pattern -->
+  <path d="M20 40H100M20 60H100M20 80H100M40 20V100M60 20V100M80 20V100" stroke="#222B42" stroke-width="1.5"/>
+  <!-- Central Stylized Manak Triangle / A -->
+  <path d="M60 28L88 88H72L60 62L48 88H32L60 28Z" fill="#FFFFFF"/>
+  <circle cx="60" cy="50" r="4" fill="#2563EB"/>
+  <!-- Standard BIS Mark Ring -->
+  <circle cx="60" cy="60" r="46" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="6 4" stroke-opacity="0.3"/>
+</svg>
