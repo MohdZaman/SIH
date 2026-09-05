@@ -1,1 +1,12 @@
-@import "tailwindcss";
+/* App specific transitions and custom canvas styles */
+.graph-canvas {
+  cursor: grab;
+}
+
+.graph-canvas:active {
+  cursor: grabbing;
+}
+
+.sparkline-glow {
+  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.25));
+}
