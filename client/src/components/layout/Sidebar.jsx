@@ -34,13 +34,13 @@ export default function Sidebar({
     },
     {
       to: '/tender-auditor',
-      label: 'Tender Gap Auditor',
+      label: 'Audit Tender',
       icon: Users,
       badge: 'New',
     },
     {
       to: '/spec-recommender',
-      label: 'Spec Recommender',
+      label: 'Search Standards',
       icon: Search,
     },
     {
