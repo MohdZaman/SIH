@@ -81,7 +81,7 @@ export default function Sidebar({
 
       {/* Main Sidebar: Drawer on mobile, Sticky Flex sibling on desktop (no overlaying page content) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 lg:static lg:sticky lg:top-0 lg:h-screen lg:z-20 shrink-0 bg-[#FBFBFC] border-r border-slate-200/80 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-40 lg:static lg:top-0 lg:h-screen lg:z-20 shrink-0 bg-[#FBFBFC] border-r border-slate-200/80 flex flex-col transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0 shadow-2xl w-60' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[70px]' : 'lg:w-60'}`}
       >
