@@ -1,49 +1,56 @@
 import mongoose from "mongoose";
 
 const procurementSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    {
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
 
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-    type: {
-      type: String,
-      enum: ["tender", "procurement", "boq"],
-      default: "tender",
-    },
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-    status: {
-      type: String,
-      enum: [
-        "DRAFT",
-        "ANALYZING",
-        "COMPLETED",
-        "FAILED",
-      ],
-      default: "DRAFT",
-    },
+        type: {
+            type: String,
+            enum: ["tender", "procurement", "boq"],
+            default: "tender"
+        },
 
-    complianceScore: {
-      type: Number,
-      default: null,
+        status: {
+            type: String,
+            enum: [
+                "DRAFT",
+                "ANALYZING",
+                "COMPLETED",
+                "FAILED"
+            ],
+            default: "DRAFT"
+        },
+
+        complianceScore: {
+            type: Number,
+            default: null
+        }
     },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true
+    }
 );
 
 const Procurement = mongoose.model(
-  "Procurement",
-  procurementSchema
+    "Procurement",
+    procurementSchema
 );
 
 export default Procurement;

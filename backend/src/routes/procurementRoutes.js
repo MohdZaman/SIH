@@ -2,8 +2,10 @@ import express from 'express'
 import { analyzeProcurementController, createProcurement, deleteProcurement, getProcurement, 
     getProcurementById,getRecommendations,getDashboardSummary,getProcurementEvidence,getProcurementGraphController } from '../controllers/procurementsController.js'
 import { recommendStandard } from '../controllers/standardController.js'
+import authMiddleware from '../middleware/auth.middleware.js'
 
 const procurementRouter = express.Router()
+procurementRouter.use(authMiddleware)
 
 procurementRouter.post('/',createProcurement)
 procurementRouter.get('/',getProcurement)
