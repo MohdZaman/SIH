@@ -20,7 +20,7 @@ const allowedOrigins = [
 
     // Add your deployed frontend URL here
     // Example:
-    // "https://your-frontend.vercel.app"
+    "https://sih-4un8.vercel.app"
 ];
 
 app.use(
