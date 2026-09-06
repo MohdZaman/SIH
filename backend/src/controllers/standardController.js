@@ -1095,6 +1095,64 @@ export const getStandardGraphController =
         }
     };
 
+    export const getStandardGraphByCodeController = async (req, res) => {
+    try {
+        const { code } = req.query;
+        let { depth = 1 } = req.query;
+
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                message: "Standard code is required"
+            });
+        }
+
+        depth = Math.min(Math.max(Number(depth) || 1, 1), 3);
+
+        // Find standard using its IS code
+        const standard = await Standard.findOne({
+            code: {
+                $regex: `^${escapeRegex(code.trim())}$`,
+                $options: "i"
+            }
+        });
+
+        if (!standard) {
+            return res.status(404).json({
+                success: false,
+                message: `Standard not found: ${code}`
+            });
+        }
+
+        // Build graph using MongoDB ID internally
+        const graph = await getStandardGraph(
+            standard._id,
+            depth
+        );
+
+        return res.status(200).json({
+            success: true,
+            standard: {
+                _id: standard._id,
+                code: standard.code,
+                title: standard.title,
+                version: standard.version,
+                standardFamily: standard.standardFamily
+            },
+            depth,
+            graph
+        });
+
+    } catch (error) {
+        console.error("Graph by code error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch standard graph"
+        });
+    }
+};
+
 // ======================================================
 // EXPORTS
 // ======================================================
@@ -1104,8 +1162,6 @@ export {
     createStandard,
     searchStandard,
     getStandardById,
-    recommendStandard,
-   
-  
-
+    recommendStandard
+ 
 };
