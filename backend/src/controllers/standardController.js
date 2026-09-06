@@ -15,6 +15,10 @@ import { getStandardVersionInfo } from "../services/standardVersionService.js";
 // CREATE STANDARD
 // ======================================================
 
+const escapeRegex = (value) => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 const createStandard = async (req, res) => {
 
     try {
@@ -352,6 +356,21 @@ const recommendStandard = async (req, res) => {
                 query,
                 10
             );
+            const semanticMatches = [];
+
+for (const result of candidates.points || []) {
+
+    if (!result.payload) continue;
+
+    semanticMatches.push({
+        standardId: result.payload.standardId,
+        code: result.payload.code,
+        title: result.payload.title,
+        category: result.payload.category,
+        latestVersion: result.payload.latestVersion,
+        similarityScore: result.score
+    });
+}
 
 
         const evaluatedCandidates = [];
@@ -914,22 +933,24 @@ const recommendStandard = async (req, res) => {
 
         return res.status(200).json({
 
-            success: true,
+    success: true,
 
-            procurementId:
-                procurement._id,
+    procurementId:
+        procurement._id,
 
-            requirementId:
-                requirement._id,
+    requirementId:
+        requirement._id,
 
-            query,
+    query,
 
-            count:
-                recommendations.length,
+    semanticMatches,
 
-            recommendations
+    count:
+        recommendations.length,
 
-        });
+    recommendations
+
+});
 
 
     } catch (error) {
