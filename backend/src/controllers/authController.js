@@ -1,6 +1,13 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+const validEmployeeIds = [
+    "GOV001",
+    "GOV002",
+    "GOV003",
+    "GOV004",
+    "GOV005"
+];
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -17,12 +24,19 @@ const generateToken = (user) => {
 
 export const register = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) {
+        const { employeeID, name, email, password } = req.body;
+        if ( !employeeID || !name || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Name, email and password are required"
+                message: "EmployeeID, Name, email and password are required"
             });
+        }
+       const normalizedEmployeeID = employeeID.trim().toUpperCase();
+        if(!validEmployeeIds.includes(normalizedEmployeeID)){
+            return res.status(403).json({
+                success:false,
+                message:"EmployeeID is not valid"
+            })
         }
 
         if (password.length < 6) {
@@ -42,8 +56,19 @@ export const register = async (req, res) => {
                 message: "An account with this email already exists"
             });
         }
+
+        const existingEmployee = await User.findOne({
+            employeeID: normalizedEmployeeID
+        })
+        if(existingEmployee){
+            return res.status(409).json({
+                success:false,
+                message:"Employee with this EmployeeID is also registered"
+            })
+        }
         const hashedPassword = await bcrypt.hash(password, 12);
         const user = await User.create({
+            employeeID:normalizedEmployeeID,
             name: name.trim(),
             email: normalizedEmail,
             password: hashedPassword
@@ -57,6 +82,7 @@ export const register = async (req, res) => {
             token,
             user: {
                 id: user._id,
+                employeeID:user.employeeID,
                 name: user.name,
                 email: user.email,
                 role: user.role

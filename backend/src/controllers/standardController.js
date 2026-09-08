@@ -10,11 +10,6 @@ import { evaluateStandard } from "../services/standardEvaluationService.js";
 import { getStandardGraph } from '../services/standardGraphService.js'
 import { getStandardVersionInfo } from "../services/standardVersionService.js";
 
-
-// ======================================================
-// CREATE STANDARD
-// ======================================================
-
 const escapeRegex = (value) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
@@ -108,12 +103,6 @@ const createStandard = async (req, res) => {
 
 };
 
-
-
-// ======================================================
-// SEARCH STANDARDS
-// ======================================================
-
 const searchStandard = async (req, res) => {
 
     try {
@@ -167,12 +156,6 @@ const searchStandard = async (req, res) => {
     }
 
 };
-
-
-
-// ======================================================
-// GET STANDARD BY ID
-// ======================================================
 
 const getStandardById = async (req, res) => {
 
@@ -236,26 +219,12 @@ const getStandardById = async (req, res) => {
 
 };
 
-
-
-// ======================================================
-// RECOMMEND STANDARDS FOR PROCUREMENT
-// ======================================================
-
-// ======================================================
-// RECOMMEND STANDARDS FOR PROCUREMENT
-// ======================================================
-
 const recommendStandard = async (req, res) => {
 
     try {
 
         const { id } = req.params;
 
-
-        // ================================================
-        // VALIDATE PROCUREMENT ID
-        // ================================================
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
 
@@ -267,11 +236,6 @@ const recommendStandard = async (req, res) => {
             });
 
         }
-
-
-        // ================================================
-        // FIND PROCUREMENT
-        // ================================================
 
         const procurement =
             await Procurement.findById(id);
@@ -287,11 +251,6 @@ const recommendStandard = async (req, res) => {
             });
 
         }
-
-
-        // ================================================
-        // FIND REQUIREMENT
-        // ================================================
 
         const requirement =
             await Requirement.findOne({
@@ -315,10 +274,6 @@ const recommendStandard = async (req, res) => {
 
         }
 
-
-        // ================================================
-        // BUILD SEARCH QUERY
-        // ================================================
 
         const query = [
 
@@ -346,11 +301,6 @@ const recommendStandard = async (req, res) => {
 
         }
 
-
-        // ================================================
-        // SEMANTIC SEARCH
-        // ================================================
-
         const candidates =
             await searchSimilarStandards(
                 query,
@@ -374,12 +324,6 @@ for (const result of candidates.points || []) {
 
 
         const evaluatedCandidates = [];
-
-
-        // ================================================
-        // GEMINI EVALUATION
-        // ================================================
-
         for (
             const result
             of candidates.points || []
@@ -413,11 +357,6 @@ for (const result of candidates.points || []) {
             });
 
         }
-
-
-        // ================================================
-        // GROUP BY STANDARD FAMILY
-        // ================================================
 
         const familyMap =
             new Map();
@@ -465,11 +404,6 @@ for (const result of candidates.points || []) {
 
         }
 
-
-        // ================================================
-        // SELECT BEST REPRESENTATIVE FROM EACH FAMILY
-        // ================================================
-
         const selectedCandidates = [];
 
 
@@ -482,12 +416,6 @@ for (const result of candidates.points || []) {
         ) {
 
             let selected = null;
-
-
-            // ============================================
-            // FIND GENERIC RECORD
-            // ============================================
-
             const genericRecord =
                 familyCandidates.find(
                     candidate =>
@@ -498,10 +426,6 @@ for (const result of candidates.points || []) {
 
                 );
 
-
-            // ============================================
-            // IF GENERIC RECORD HAS LATEST VERSION
-            // ============================================
 
             if (genericRecord) {
 
@@ -555,11 +479,6 @@ for (const result of candidates.points || []) {
 
             }
 
-
-            // ============================================
-            // NO GENERIC LATEST VERSION
-            // ============================================
-
             else {
 
                 /*
@@ -605,11 +524,6 @@ for (const result of candidates.points || []) {
 
         }
 
-
-        // ================================================
-        // SORT FINAL CANDIDATES
-        // ================================================
-
         selectedCandidates.sort(
             (a, b) =>
 
@@ -617,11 +531,6 @@ for (const result of candidates.points || []) {
                 a.relevanceScore
 
         );
-
-
-        // ================================================
-        // LIMIT TO TOP 5
-        // ================================================
 
         const recommendations =
             selectedCandidates
@@ -688,11 +597,6 @@ for (const result of candidates.points || []) {
                     }
                 );
 
-
-        // ================================================
-        // DELETE OLD EVIDENCE
-        // ================================================
-
         const oldRecommendationIds =
             await Recommendation.find({
 
@@ -720,10 +624,6 @@ for (const result of candidates.points || []) {
         }
 
 
-        // ================================================
-        // DELETE OLD RECOMMENDATIONS
-        // ================================================
-
         await Recommendation.deleteMany({
 
             procurement:
@@ -731,10 +631,6 @@ for (const result of candidates.points || []) {
 
         });
 
-
-        // ================================================
-        // SAVE NEW RECOMMENDATIONS
-        // ================================================
 
         const recommendationDocuments =
             recommendations.map(
@@ -796,11 +692,6 @@ for (const result of candidates.points || []) {
             recommendationDocuments
         );
 
-
-        // ================================================
-        // GENERATE EVIDENCE
-        // ================================================
-
         const savedRecommendations =
             await Recommendation.find({
 
@@ -826,11 +717,6 @@ for (const result of candidates.points || []) {
 
             if (!standard) continue;
 
-
-            // ============================================
-            // STANDARD TITLE EVIDENCE
-            // ============================================
-
             evidenceDocuments.push({
 
                 recommendation:
@@ -849,11 +735,6 @@ for (const result of candidates.points || []) {
                     standard.source
 
             });
-
-
-            // ============================================
-            // STANDARD SCOPE EVIDENCE
-            // ============================================
 
             if (standard.description) {
 
@@ -878,10 +759,6 @@ for (const result of candidates.points || []) {
 
             }
 
-
-            // ============================================
-            // REQUIREMENT MATCH EVIDENCE
-            // ============================================
 
             if (
                 recommendation.productMatch ||
@@ -911,11 +788,6 @@ for (const result of candidates.points || []) {
 
         }
 
-
-        // ================================================
-        // SAVE EVIDENCE
-        // ================================================
-
         if (
             evidenceDocuments.length > 0
         ) {
@@ -925,11 +797,6 @@ for (const result of candidates.points || []) {
             );
 
         }
-
-
-        // ================================================
-        // RESPONSE
-        // ================================================
 
         return res.status(200).json({
 
@@ -1174,9 +1041,6 @@ export const getStandardGraphController =
     }
 };
 
-// ======================================================
-// EXPORTS
-// ======================================================
 
 export {
 
