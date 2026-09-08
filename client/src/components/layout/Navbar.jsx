@@ -1,18 +1,17 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ArrowRight } from 'lucide-react';
+import SaralLogo from '../common/SaralLogo';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   return (
     <header className="landing-nav z-20">
       <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2 group">
-          <span className="font-semibold text-[17px] text-emerald-500 tracking-tight">
-            ManakAI
-          </span>
-        </Link>
+        <SaralLogo theme="light" size="md" asLink={true} />
       </div>
 
       <nav className="hidden items-center gap-8 text-sm font-medium text-slate-400 md:flex ml-10">
@@ -34,12 +33,14 @@ export default function Navbar() {
       </nav>
 
       <div className="ml-auto flex items-center gap-4">
-        <Link
-          to="/login"
-          className="hidden text-sm text-slate-300 hover:text-white font-medium sm:block transition-colors"
-        >
-          Sign in
-        </Link>
+        {!isAuthenticated && (
+          <Link
+            to="/login"
+            className="hidden text-sm text-slate-300 hover:text-white font-medium sm:block transition-colors"
+          >
+            Sign in
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
