@@ -26,18 +26,18 @@ export default function StandardSearchCard({ standard }) {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-blue bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/60">
-              Primary BIS Recommendation
+            <span className="text-xs font-medium text-brand-blue bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/60 font-sans">
+              Primary BIS recommendation
             </span>
-            <span className="text-xs text-slate-500">{standard.status}</span>
+            <span className="text-xs text-slate-500 font-sans font-normal">{standard.status}</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-normal">
+          <div className="text-lg sm:text-xl font-mono font-normal text-slate-800">
             {standard.code}
-          </h2>
-          <p className="text-sm font-medium text-slate-700 mt-1">
+          </div>
+          <h3 className="text-base sm:text-lg font-serif font-semibold text-slate-900 mt-1">
             {standard.title}
-          </p>
+          </h3>
         </div>
 
         <div className="shrink-0">
