@@ -1,27 +1,42 @@
 import Standard from "../models/standardModel.js";
+import { searchSimilarStandards } from "./qdrantStandardServices.js";
 
-const searchStandards = async (query) => {
-
+const searchStandards = async (query, limit = 10) => {
     if (!query || !query.trim()) {
         return [];
     }
 
-    const keywords = query
-        .trim()
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean);
+    const results = await searchSimilarStandards(
+        query.trim(),
+        limit
+    );
 
-    const standards = await Standard.find({
-        $or: keywords.flatMap(keyword => [
-            { code: { $regex: keyword, $options: "i" } },
-            { title: { $regex: keyword, $options: "i" } },
-            { description: { $regex: keyword, $options: "i" } },
-            { category: { $regex: keyword, $options: "i" } },
-            { subcategory: { $regex: keyword, $options: "i" } },
-            { keywords: { $regex: keyword, $options: "i" } }
-        ])
-    });
+    const standards = [];
+
+    for (const result of results.points || []) {
+        if (!result.payload?.standardId) continue;
+
+        const standard = await Standard.findById(
+            result.payload.standardId
+        );
+
+        if (!standard) continue;
+
+        standards.push({
+            _id: standard._id,
+            code: standard.code,
+            title: standard.title,
+            standardFamily: standard.standardFamily,
+            version: standard.version,
+            category: standard.category,
+            subcategory: standard.subcategory,
+            description: standard.description,
+            source: standard.source,
+            status: standard.status,
+            latestVersion: standard.latestVersion,
+            similarityScore: result.score
+        });
+    }
 
     return standards;
 };
