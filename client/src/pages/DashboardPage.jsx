@@ -3,79 +3,88 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
-  CheckCircle2,
-  ShieldAlert,
-  TrendingUp,
-  Award,
-  Layers,
-  Search,
-  ArrowRight,
   AlertCircle,
-  Clock,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import MetricCard from '../components/common/MetricCard';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
+import CreateProcurementModal from '../components/procurement/CreateProcurementModal';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchDashboardSummary,
-  createProcurement,
+  deleteProcurement,
 } from '../features/procurement/procurementSlice';
+import { notify } from '@/lib/notify';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const {
-    dashboardSummary,
     recentProcurements,
-    recentRecommendations,
     loading,
     error,
   } = useSelector((state) => state.procurement);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newProcurement, setNewProcurement] = useState({
-    name: '',
-    description: '',
-    type: 'Goods',
-  });
-  const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchDashboardSummary());
   }, [dispatch]);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!newProcurement.name.trim() || !newProcurement.description.trim()) return;
-
-    setSubmitting(true);
-    try {
-      await dispatch(createProcurement(newProcurement)).unwrap();
-      setIsCreateModalOpen(false);
-      setNewProcurement({ name: '', description: '', type: 'Goods' });
-      await dispatch(fetchDashboardSummary()).unwrap();
-    } catch (err) {
-      alert(err.message || 'Failed to create procurement');
-    } finally {
-      setSubmitting(false);
+  useEffect(() => {
+    if (error) {
+      notify.error(error, 'Dashboard sync notice');
     }
-  };
+  }, [error]);
 
-  const summary = dashboardSummary || {
-    totalProcurements: 0,
-    totalRequirements: 0,
-    totalRecommendations: 0,
-    highConfidence: 0,
-    needsReview: 0,
+  const handleDeleteTender = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setIsDeleting(true);
+      const targetId = deleteTarget.id || deleteTarget._id;
+      if (!targetId) {
+        notify.error('Unable to identify tender ID');
+        return;
+      }
+
+      await dispatch(deleteProcurement(targetId)).unwrap();
+      dispatch(fetchDashboardSummary());
+      setDeleteTarget(null);
+      notify.success(`Procurement tender "${deleteTarget.title || deleteTarget.name || 'item'}" deleted successfully`);
+    } catch (err) {
+      console.error('Failed to delete procurement:', err);
+      notify.error('Failed to remove procurement tender');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <DashboardLayout
-      headerTitle={`Welcome${user?.name ? `, ${user.name}` : ''}`}
-      headerSubtitle="Real-time BIS technical specifications and procurement dashboard"
+      headerTitle="Procurement Dashboard"
+      headerSubtitle="Real-time monitoring of active procurements, standards compliance, and technical audit flags."
       actions={
         <div className="flex items-center gap-2.5">
           <Button
@@ -90,72 +99,16 @@ export default function DashboardPage() {
       }
     >
       <div className="space-y-6">
-        {/* Backend Error Alert if connection issues */}
-        {error && (
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Backend Notice: {error}</span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => loadDashboardSummary()}
-            >
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {/* 3 Real KPI Metric Cards based on getDashboardSummary response */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <MetricCard
-            title="Total Procurements"
-            value={summary.totalProcurements}
-            subtitle="Registered procurement tenders"
-            trend={summary.totalRequirements ? `${summary.totalRequirements} Requirements Extracted` : 'Active'}
-            trendType="success"
-            icon={FileText}
-            badgeIconBg="bg-blue-50 text-brand-blue"
-            sparklineColor="#2563EB"
-            sparklineData={[0, 2, summary.totalProcurements]}
-          />
-
-          <MetricCard
-            title="Total Recommendations"
-            value={summary.totalRecommendations}
-            subtitle="Authoritative standards identified"
-            trend={summary.highConfidence ? `${summary.highConfidence} High Confidence` : 'Live Analysis'}
-            trendType="success"
-            icon={CheckCircle2}
-            badgeIconBg="bg-emerald-50 text-emerald-600"
-            sparklineColor="#10B981"
-            sparklineData={[0, 1, summary.totalRecommendations]}
-          />
-
-          <MetricCard
-            title="Needs Officer Review"
-            value={summary.needsReview}
-            subtitle="Relevance scores under 70%"
-            trend={summary.needsReview > 0 ? 'Requires Evaluation' : 'Zero Flags'}
-            trendType={summary.needsReview > 0 ? 'warning' : 'success'}
-            icon={ShieldAlert}
-            badgeIconBg="bg-amber-50 text-amber-600"
-            sparklineColor="#F59E0B"
-            sparklineData={[summary.needsReview, summary.needsReview]}
-          />
-        </div>
-
-        {/* Recent Procurements Table */}
-        <div className="bg-white border border-brand-border rounded-xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        {/* Recent Procurements Table Card */}
+        <Card className="bg-white border-slate-200/90 shadow-2xs overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100 bg-slate-50/50">
             <div>
-              <h2 className="text-sm font-bold text-slate-900">
+              <CardTitle className="text-lg font-serif font-semibold text-slate-900">
                 Recent Procurements
-              </h2>
-              <p className="text-xs text-slate-500">
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500 font-sans mt-0.5">
                 Tenders managed in this agency workspace
-              </p>
+              </CardDescription>
             </div>
             <Button
               variant="outline"
@@ -164,177 +117,140 @@ export default function DashboardPage() {
             >
               + Add Procurement
             </Button>
-          </div>
+          </CardHeader>
 
-          {recentProcurements.length === 0 ? (
-            <div className="p-10 text-center text-slate-400">
-              <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300" />
-              <p className="text-xs font-semibold text-slate-600">No procurements registered yet</p>
-              <p className="text-[11px] mt-1">Create your first tender procurement to begin standard recommendation.</p>
-              <div className="mt-4">
-                <Button
-                  variant="royal"
-                  size="sm"
-                  onClick={() => setIsCreateModalOpen(true)}
-                >
-                  Create Tender Procurement
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="py-3 px-4">Title / Identifier</th>
-                    <th className="py-3 px-4">Description</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Created Date</th>
-                    <th className="py-3 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentProcurements.map((proc) => (
-                    <tr key={proc._id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-900">
-                        {proc.title || proc.name || 'Untitled Procurement'}
-                      </td>
-                      <td className="py-3 px-4 text-slate-600 max-w-sm truncate">
-                        {proc.description}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-brand-blue border border-blue-200/60">
-                          {proc.status || 'Active'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-400 text-[11px]">
-                        {proc.createdAt ? new Date(proc.createdAt).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/tender-auditor?id=${proc._id}`)}
-                        >
-                          Audit Tender
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Recommendations Table */}
-        {recentRecommendations?.length > 0 && (
-          <div className="bg-white border border-brand-border rounded-xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="text-sm font-bold text-slate-900">
-                Latest Standards Recommendations
-              </h2>
-              <p className="text-xs text-slate-500">
-                Matched against procurement requirements by the AI matching engine
-              </p>
-            </div>
-
-            <div className="divide-y divide-slate-100">
-              {recentRecommendations.map((rec, index) => (
-                <div key={rec._id || index} className="p-4 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-brand-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">
-                        {rec.code}
-                      </span>
-                      <span className="font-semibold text-slate-900">{rec.title}</span>
-                    </div>
-                    {rec.reason && (
-                      <p className="text-slate-600 mt-1 max-w-2xl">{rec.reason}</p>
-                    )}
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                      Score: {rec.relevanceScore}%
-                    </span>
-                  </div>
+          <CardContent className="p-0">
+            {recentProcurements.length === 0 ? (
+              <div className="p-10 text-center text-slate-400">
+                <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                <p className="text-xs font-medium text-slate-600">No procurements registered yet</p>
+                <p className="text-[11px] mt-1 font-normal">Create your first tender procurement to begin standard recommendation.</p>
+                <div className="mt-4">
+                  <Button
+                    variant="royal"
+                    size="sm"
+                    onClick={() => setIsCreateModalOpen(true)}
+                  >
+                    Create Tender Procurement
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-4/12">Title / Identifier</TableHead>
+                    <TableHead className="w-4/12">Description</TableHead>
+                    <TableHead className="w-1/12">Status</TableHead>
+                    <TableHead className="w-1/12">Created Date</TableHead>
+                    <TableHead className="text-right w-2/12">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentProcurements.map((proc) => {
+                    const procId = proc._id || proc.id;
+                    return (
+                      <TableRow key={procId} className="hover:bg-slate-50/80 transition-colors">
+                        <TableCell className="font-medium text-slate-900 py-3.5">
+                          {proc.title || proc.name || 'Untitled Procurement'}
+                        </TableCell>
+                        <TableCell className="text-slate-600 max-w-sm truncate font-normal py-3.5">
+                          {proc.description}
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <Badge variant="emerald" className="font-medium">
+                            {proc.status || 'Active'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-400 text-xs font-normal py-3.5">
+                          {proc.createdAt ? new Date(proc.createdAt).toLocaleDateString() : 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-right py-3.5">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/tender-auditor?id=${procId}`)}
+                            >
+                              Analyze Tender
+                            </Button>
+                            <button
+                              type="button"
+                              title="Delete Tender"
+                              aria-label={`Delete ${proc.title || proc.name || 'tender'}`}
+                              onClick={() => setDeleteTarget(proc)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-slate-200/80 hover:border-rose-200 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Create Procurement Modal */}
+      {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Create New Tender Procurement"
-        subtitle="Registers a new procurement in the backend database for AI clause audit and recommendation."
-      >
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Procurement Name / Tender Title
-            </label>
-            <input
-              type="text"
-              required
-              value={newProcurement.name}
-              onChange={(e) => setNewProcurement({ ...newProcurement, name: e.target.value })}
-              placeholder="e.g. Highway Streetlighting Fixtures NIT-2024"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-brand-blue"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Procurement Type
-            </label>
-            <select
-              value={newProcurement.type}
-              onChange={(e) => setNewProcurement({ ...newProcurement, type: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-brand-blue"
-            >
-              <option value="Goods">Goods / Equipment</option>
-              <option value="Works">Civil / Engineering Works</option>
-              <option value="Services">Technical Services</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Technical Description / Scope of Work
-            </label>
-            <textarea
-              rows={4}
-              required
-              value={newProcurement.description}
-              onChange={(e) => setNewProcurement({ ...newProcurement, description: e.target.value })}
-              placeholder="Detailed description of goods, specifications, voltage ratings, materials, ingress ratings..."
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-brand-blue resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+        title="Delete Tender"
+        subtitle="This action will permanently delete this procurement tender."
+        maxWidth="max-w-md"
+        footer={
+          <>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsCreateModalOpen(false)}
+              disabled={isDeleting}
+              onClick={() => setDeleteTarget(null)}
             >
               Cancel
             </Button>
             <Button
-              type="submit"
-              variant="royal"
+              variant="danger"
               size="sm"
-              loading={submitting}
+              loading={isDeleting}
+              iconLeft={Trash2}
+              onClick={handleDeleteTender}
             >
-              Save Procurement
+              Delete Tender
             </Button>
+          </>
+        }
+      >
+        <div className="text-xs text-slate-600 space-y-3 font-sans">
+          <p>
+            Are you sure you want to delete{' '}
+            <strong className="font-semibold text-slate-900">
+              {deleteTarget?.title || deleteTarget?.name || 'this tender'}
+            </strong>
+            ?
+          </p>
+          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200/80 text-rose-800 text-[11px] leading-relaxed flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+            <span>
+              All extracted specifications, compliance audits, and AI analyses linked to this procurement will be permanently removed.
+            </span>
           </div>
-        </form>
+        </div>
       </Modal>
+
+      {/* Create Procurement Modal with Dual Text & PDF Document Upload */}
+      <CreateProcurementModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          dispatch(fetchDashboardSummary());
+        }}
+      />
     </DashboardLayout>
   );
 }
