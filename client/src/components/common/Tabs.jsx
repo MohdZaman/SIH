@@ -17,7 +17,7 @@ export default function Tabs({
               key={tab.id}
               type="button"
               onClick={() => onChange(tab.id)}
-              className={`flex-1 py-2 px-3 text-xs font-semibold rounded-md transition-all duration-150 flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 text-xs font-medium font-sans rounded-md transition-all duration-150 flex items-center justify-center gap-1.5 ${
                 isActive
                   ? 'bg-brand-navy text-white shadow-sm border border-white/10'
                   : 'text-slate-400 hover:text-white'
@@ -27,7 +27,7 @@ export default function Tabs({
               {tab.label}
               {tab.count !== undefined && (
                 <span
-                  className={`ml-1 px-1.5 py-0.2 text-[10px] rounded-full ${
+                  className={`ml-1 px-1.5 py-0.2 text-[10px] font-sans font-medium rounded-full ${
                     isActive ? 'bg-brand-blue text-white' : 'bg-slate-800 text-slate-400'
                   }`}
                 >
@@ -51,14 +51,14 @@ export default function Tabs({
               key={tab.id}
               type="button"
               onClick={() => onChange(tab.id)}
-              className={`py-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${
-                isActive ? 'text-brand-blue font-semibold' : 'text-slate-500 hover:text-slate-800'
+              className={`py-3 text-sm font-medium font-sans transition-colors relative flex items-center gap-2 ${
+                isActive ? 'text-brand-blue' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               {tab.icon && <tab.icon className="h-4 w-4" />}
               {tab.label}
               {tab.count !== undefined && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-sans font-medium">
                   {tab.count}
                 </span>
               )}
@@ -82,7 +82,7 @@ export default function Tabs({
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`py-1.5 px-3 text-xs font-semibold rounded-md transition-all duration-150 flex items-center gap-1.5 ${
+            className={`py-1.5 px-3 text-xs font-medium font-sans rounded-md transition-all duration-150 flex items-center gap-1.5 ${
               isActive
                 ? 'bg-brand-blue text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'

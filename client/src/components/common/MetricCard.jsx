@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card } from '@/components/ui/card';
 import Badge from './Badge';
 
 // Helper to generate a smooth curved SVG path from array of numbers
@@ -39,22 +40,22 @@ export default function MetricCard({
   trendType = 'success', // 'success' | 'danger' | 'warning'
   icon: Icon,
   badgeIconBg = 'bg-blue-50 text-brand-blue',
-  sparklineColor = '#2563EB',
+  sparklineColor = '#059669',
   sparklineData = [20, 24, 22, 28, 32, 30, 42, 48],
 }) {
   const { path, area } = generateSparklinePath(sparklineData, 140, 46);
   const gradientId = `grad-${title.replace(/\s+/g, '-').toLowerCase()}`;
 
   return (
-    <div className="bg-white border border-brand-border rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+    <Card className="bg-white border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-all duration-200">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <div className={`p-2 rounded-lg ${badgeIconBg} shrink-0`}>
+            <div className={`p-2 rounded-xl ${badgeIconBg} shrink-0`}>
               <Icon className="h-4 w-4" />
             </div>
           )}
-          <span className="text-xs font-medium uppercase tracking-normal text-slate-500">
+          <span className="text-xs font-medium text-slate-500 font-sans">
             {title}
           </span>
         </div>
@@ -68,7 +69,7 @@ export default function MetricCard({
 
       <div className="mt-4 flex items-baseline justify-between gap-4">
         <div>
-          <div className="text-2xl lg:text-3xl font-semibold tracking-normal text-slate-900">
+          <div className="text-2xl lg:text-3xl font-semibold tracking-tight text-slate-900">
             {value}
           </div>
           {subtitle && (
@@ -97,6 +98,6 @@ export default function MetricCard({
           </svg>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
