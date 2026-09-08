@@ -42,10 +42,10 @@ export default function QCOTrackerPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-lg font-serif font-semibold text-slate-900">
                 Active Gazette Notifications & Statutory Orders
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs font-normal text-slate-500 font-sans">
                 Updated weekly from the Department for Promotion of Industry and Internal Trade (DPIIT)
               </p>
             </div>
