@@ -9,7 +9,7 @@ import {
   removeUserCookie,
 } from '../../utils/cookieUtils';
 
-// Helper to normalize user object
+// Helper to normalize user object as per backend User schema
 const normalizeUser = (user) => {
   if (!user) return null;
   const id = user.id || user._id;
@@ -17,7 +17,8 @@ const normalizeUser = (user) => {
     ...user,
     id,
     _id: id,
-    role: user.role || 'USER',
+    employeeID: user.employeeID || '',
+    role: user.role || 'OFFICIAL',
   };
 };
 
@@ -44,7 +45,8 @@ export const loginOfficer = createAsyncThunk(
         user,
       };
     } catch (error) {
-      return rejectWithValue(error.message || 'Login failed');
+      const msg = error.data?.message || error.message || 'Login failed. Check your credentials.';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -53,25 +55,36 @@ export const registerAgency = createAsyncThunk(
   'auth/registerAgency',
   async (formData, { rejectWithValue }) => {
     try {
+      const normalizedEmployeeID = (formData.employeeID || '').trim().toUpperCase();
+      const normalizedEmail = (formData.email || '').trim().toLowerCase();
       const payload = {
-        name: formData.name?.trim() || formData.email.split('@')[0],
-        email: formData.email.trim().toLowerCase(),
+        employeeID: normalizedEmployeeID,
+        name: (formData.name || '').trim(),
+        email: normalizedEmail,
         password: formData.password,
       };
 
-      if (formData.role === 'ADMIN' || formData.role === 'USER') {
+      if (formData.role) {
         payload.role = formData.role;
       }
 
       const data = await apiClient.post('/auth/register', payload);
       const user = normalizeUser(data?.user);
 
+      if (data?.token) {
+        setTokenCookie(data.token);
+      }
+      if (user) {
+        setUserCookie(user);
+      }
+
       return {
         ...data,
         user,
       };
     } catch (error) {
-      return rejectWithValue(error.message || 'Registration failed');
+      const msg = error.data?.message || error.message || 'Registration failed';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -91,7 +104,8 @@ export const fetchProfile = createAsyncThunk(
       }
       return data;
     } catch (error) {
-      return rejectWithValue(error.message || 'Session verification failed');
+      const msg = error.data?.message || error.message || 'Session verification failed';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -140,6 +154,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(loginOfficer.rejected, (state, action) => {
         state.loading = false;
@@ -150,8 +165,11 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerAgency.fulfilled, (state) => {
+      .addCase(registerAgency.fulfilled, (state, action) => {
         state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = !!action.payload.token;
         state.error = null;
       })
       .addCase(registerAgency.rejected, (state, action) => {
