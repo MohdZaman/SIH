@@ -235,10 +235,10 @@ export default function IsometricStandardsGrid() {
       </svg>
 
       {/* Bottom Overlay Label */}
-      <div className="absolute bottom-6 left-8 flex items-center gap-3 z-10">
+      <div className="absolute bottom-6 left-8 flex items-center gap-3 z-10 font-sans">
         <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-        <span className="text-[11px] font-mono tracking-widest text-slate-400 uppercase">
-          ManakAI • Smart Site & Standards Grid
+        <span className="text-xs font-normal text-slate-400">
+          SARAL • Smart Site & Standards Grid
         </span>
       </div>
     </div>

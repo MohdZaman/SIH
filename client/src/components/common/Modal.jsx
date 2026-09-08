@@ -1,5 +1,13 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 export default function Modal({
   isOpen,
@@ -10,40 +18,19 @@ export default function Modal({
   footer,
   maxWidth = 'max-w-lg',
 }) {
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-brand-dark/70 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Dialog box */}
-      <div
-        className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150`}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">{title}</h3>
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className={cn('p-0 overflow-hidden border border-slate-200 shadow-xl sm:rounded-2xl', maxWidth)}>
+        {(title || subtitle) && (
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            {title && <DialogTitle className="text-base font-serif font-semibold text-slate-900">{title}</DialogTitle>}
+            {subtitle && (
+              <DialogDescription className="text-xs text-slate-500 mt-1 font-sans font-normal leading-relaxed">
+                {subtitle}
+              </DialogDescription>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        )}
 
         <div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div>
 
@@ -52,7 +39,7 @@ export default function Modal({
             {footer}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

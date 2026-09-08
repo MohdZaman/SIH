@@ -43,7 +43,7 @@ export default function SearchInput({
       )}
       {shortcut && !value && (
         <kbd
-          className={`hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded border ml-1 ${
+          className={`hidden sm:inline-block text-[10px] font-sans font-medium px-1.5 py-0.5 rounded border ml-1 ${
             isDark
               ? 'bg-[#1A2234] text-slate-400 border-slate-700'
               : 'bg-slate-50 text-slate-400 border-slate-200'

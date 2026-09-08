@@ -1,4 +1,12 @@
 import React from 'react';
+import {
+  Card as ShadcnCard,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export default function Card({
   children,
@@ -14,36 +22,53 @@ export default function Card({
 }) {
   const isDark = variant === 'dark';
 
-  const baseClasses = isDark
-    ? 'bg-brand-navy/90 backdrop-blur-md border border-white/10 text-white rounded-xl shadow-xl'
-    : 'bg-white border border-brand-border text-slate-900 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200';
-
-  const headerBorder = isDark ? 'border-white/10' : 'border-slate-100';
-
   return (
-    <div className={`${baseClasses} ${className}`} {...props}>
+    <ShadcnCard
+      className={cn(
+        'transition-all duration-200',
+        isDark
+          ? 'bg-brand-navy/95 backdrop-blur-md border-white/10 text-white shadow-xl'
+          : 'bg-white border-slate-200/90 text-slate-900 shadow-2xs hover:shadow-xs',
+        className
+      )}
+      {...props}
+    >
       {(title || action || Icon) && (
-        <div className={`flex items-center justify-between ${headerClassName} ${headerBorder}`}>
+        <div
+          className={cn(
+            'flex items-center justify-between',
+            headerClassName,
+            isDark ? 'border-white/10' : 'border-slate-100'
+          )}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
               <div
-                className={`p-1.5 rounded-lg shrink-0 ${
-                  isDark ? 'bg-white/10 text-white' : 'bg-blue-50 text-brand-blue'
-                }`}
+                className={cn(
+                  'p-2 rounded-xl shrink-0',
+                  isDark ? 'bg-white/10 text-white' : 'bg-emerald-50 text-emerald-700'
+                )}
               >
                 <Icon className="h-4 w-4" />
               </div>
             )}
             <div className="min-w-0">
               {title && (
-                <h3 className={`text-base font-semibold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <CardTitle
+                  className={cn(
+                    'text-base font-serif font-semibold truncate',
+                    isDark ? 'text-white' : 'text-slate-900'
+                  )}
+                >
                   {title}
-                </h3>
+                </CardTitle>
               )}
               {subtitle && (
-                <p className={`text-xs truncate ${isDark ? 'text-brand-slate' : 'text-slate-500'}`}>
+                <CardDescription
+                  className={cn('truncate', isDark ? 'text-slate-400' : 'text-slate-500')}
+                >
                   {subtitle}
-                </p>
+                </CardDescription>
               )}
             </div>
           </div>
@@ -51,6 +76,14 @@ export default function Card({
         </div>
       )}
       <div className={bodyClassName}>{children}</div>
-    </div>
+    </ShadcnCard>
   );
 }
+
+export {
+  ShadcnCard as UiCard,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+};
