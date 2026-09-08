@@ -1,70 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Network, Search, AlertCircle, Layers } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  Network,
+  Search,
+  AlertCircle,
+  Sparkles,
+  Info,
+  CheckCircle2,
+  FileCheck2,
+  BookOpen,
+  ArrowRight,
+} from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import Button from '../components/common/Button';
+import NormativeGraphCanvas from '../components/graph/NormativeGraphCanvas';
+import NodeInspectorDrawer from '../components/graph/NodeInspectorDrawer';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchStandardGraph } from '../features/standards/standardSlice';
+import {
+  fetchStandardGraph,
+  fetchStandardGraphByCode,
+  searchStandards,
+} from '../features/standards/standardSlice';
+import {
+  DEFAULT_IS_1786_GRAPH,
+  buildNormativeGraphFromBackend,
+} from '../utils/normativeGraphData';
+import { notify } from '@/lib/notify';
+
+const POPULAR_STANDARDS = [
+  { code: 'IS 1786', label: 'IS 1786: TMT Reinforcement Bars (Default)' },
+  { code: 'IS 456', label: 'IS 456: Concrete Code of Practice' },
+  { code: 'IS 10322', label: 'IS 10322: Streetlighting Luminaires' },
+  { code: 'IS 6909', label: 'IS 6909: Supersulphated Cement' },
+  { code: 'IS 302', label: 'IS 302: Electrical Appliances Safety' },
+];
 
 export default function NormativeGraphPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const { standardGraph, loading, error } = useSelector((state) => state.standards);
-  const [standardId, setStandardId] = useState(searchParams.get('id') || '');
-  const [depth, setDepth] = useState(1);
 
+  const initialQuery = searchParams.get('id') || searchParams.get('code') || 'IS 1786';
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [drawerNode, setDrawerNode] = useState(null);
+
+  // Auto-fetch on mount with the initial query
   useEffect(() => {
-    const paramId = searchParams.get('id');
-    if (paramId) {
-      setStandardId(paramId);
-      dispatch(fetchStandardGraph({ id: paramId, depth }));
-    }
-  }, [searchParams, depth, dispatch]);
+    const query = searchParams.get('id') || searchParams.get('code') || 'IS 1786';
+    setSearchQuery(query);
 
-  const handleFetch = (e) => {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(query.trim());
+    if (isObjectId) {
+      dispatch(fetchStandardGraph({ id: query.trim() }));
+    } else {
+      dispatch(fetchStandardGraphByCode({ code: query.trim() }));
+    }
+  }, [searchParams, dispatch]);
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!standardId.trim()) return;
-    dispatch(fetchStandardGraph({ id: standardId.trim(), depth }));
+    if (!searchQuery.trim()) return;
+
+    setSearchParams({ code: searchQuery.trim() });
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(searchQuery.trim());
+    if (isObjectId) {
+      dispatch(fetchStandardGraph({ id: searchQuery.trim() }));
+    } else {
+      dispatch(fetchStandardGraphByCode({ code: searchQuery.trim() }));
+    }
   };
 
-  const graphData = standardGraph?.graph;
-  const standardInfo = standardGraph?.standard;
+  useEffect(() => {
+    if (error) {
+      notify.error(error, 'Normative graph notice');
+    }
+  }, [error]);
+
+  const handleSelectQuickChip = (code) => {
+    setSearchQuery(code);
+    setSearchParams({ code });
+    dispatch(fetchStandardGraphByCode({ code }));
+  };
+
+  // Build high-fidelity graph data combining backend API response and normative knowledge engine
+  const activeGraphData = React.useMemo(() => {
+    return buildNormativeGraphFromBackend(standardGraph, searchQuery);
+  }, [standardGraph, searchQuery]);
+
+  const handleInjectClause = (node) => {
+    notify.success(`Inserted clause from ${node.label} into GeM Clause Studio!`);
+    setTimeout(() => {
+      navigate('/clause-studio');
+    }, 1000);
+  };
 
   return (
     <DashboardLayout
       headerTitle="Normative Dependency Graph Canvas"
-      headerSubtitle="Explore hierarchical standard relationships and multi-hop testing dependencies directly from the backend graph service."
+      headerSubtitle="Interactive BIS Knowledge Graph visualizing hierarchical standards, test methods, material rules, statutory QCO orders, and NABL evidence."
     >
-      <div className="space-y-6">
-        {/* Standard ID / Depth Control Bar */}
-        <div className="bg-white border border-brand-border rounded-xl p-5 shadow-sm">
-          <form onSubmit={handleFetch} className="flex flex-col sm:flex-row items-end gap-3">
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* TOP SEARCH CONTROLS BAR */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-end gap-3">
             <div className="flex-1 w-full">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Standard Database ID (MongoDB ObjectId)
+              <label className="block text-xs font-medium text-slate-700 mb-1.5 flex items-center justify-between font-sans">
+                <span>BIS Standard Code</span>
               </label>
-              <input
-                type="text"
-                value={standardId}
-                onChange={(e) => setStandardId(e.target.value)}
-                placeholder="e.g. 64f1a2b3c4d5e6f7a8b9c0d1 or inspect via Spec Recommender"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 outline-none focus:border-brand-blue"
-              />
-            </div>
-
-            <div className="w-32">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Graph Depth
-              </label>
-              <select
-                value={depth}
-                onChange={(e) => setDepth(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 outline-none focus:border-brand-blue"
-              >
-                <option value={1}>1 Tier</option>
-                <option value={2}>2 Tiers</option>
-                <option value={3}>3 Tiers</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter standard code (e.g. IS 1786) or database ID..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-normal text-slate-900 outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition-all font-sans"
+                />
+                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+              </div>
             </div>
 
             <Button
@@ -73,79 +128,93 @@ export default function NormativeGraphPage() {
               size="md"
               loading={loading}
               iconLeft={Search}
+              className="w-full sm:w-auto h-[42px]"
             >
               Load Graph
             </Button>
           </form>
+
+          {/* Quick Selection Pills */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs font-sans">
+            <span className="text-slate-400 font-medium text-[11px] flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-amber-500" />
+              <span>Quick Presets:</span>
+            </span>
+            {POPULAR_STANDARDS.map((p) => {
+              const isActive =
+                searchQuery.toUpperCase().trim() === p.code.toUpperCase().trim();
+              return (
+                <button
+                  key={p.code}
+                  type="button"
+                  onClick={() => handleSelectQuickChip(p.code)}
+                  className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${isActive
+                    ? 'bg-emerald-600 text-white shadow-sm font-medium'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-normal'
+                    }`}
+                >
+                  {p.code}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Backend Error Alert */}
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 text-xs flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-            <span>Graph Error: {error}</span>
-          </div>
-        )}
-
-        {/* Standard Header Details if loaded */}
-        {standardInfo && (
-          <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3 text-xs">
-            <div>
-              <span className="font-bold text-brand-blue font-mono text-sm mr-2">
-                {standardInfo.code}
-              </span>
-              <span className="font-semibold text-slate-900">{standardInfo.title}</span>
-              {standardInfo.version && (
-                <span className="ml-2 text-slate-500">Edition: {standardInfo.version}</span>
-              )}
-            </div>
-            <div className="text-slate-600">
-              Depth: <strong>{standardGraph.depth || depth}</strong>
-            </div>
-          </div>
-        )}
-
-        {/* Graph Canvas */}
-        {graphData ? (
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 min-h-[460px] text-white">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Network className="h-5 w-5 text-brand-blue" />
-                <h3 className="text-sm font-bold">Backend Dependency Nodes & Edges</h3>
+        {/* ACTIVE STANDARD OVERVIEW BANNER */}
+        {activeGraphData?.standard && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-semibold font-sans text-sm shrink-0 shadow-sm">
+                IS
               </div>
-              <span className="text-xs font-mono text-slate-400">
-                {graphData.nodes?.length || 0} Nodes • {graphData.edges?.length || 0} Edges
-              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-normal text-slate-800 font-mono text-base">
+                    {activeGraphData.standard.code}
+                  </span>
+                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-sans">
+                    {activeGraphData.standard.status || 'Active'}
+                  </span>
+                  {activeGraphData.standard.version && (
+                    <span className="text-xs text-slate-500 font-sans font-normal">
+                      Edition: {activeGraphData.standard.version}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-normal text-slate-700 mt-0.5 max-w-2xl font-sans leading-relaxed">
+                  {activeGraphData.standard.title}
+                </p>
+              </div>
             </div>
 
-            {/* Render Nodes List or SVG layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {graphData.nodes?.map((node, i) => (
-                <div
-                  key={node.id || i}
-                  className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs space-y-1.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-brand-blue font-mono">{node.code || node.label}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
-                      {node.type || 'Standard'}
-                    </span>
-                  </div>
-                  {node.title && <p className="text-slate-300 text-[11px]">{node.title}</p>}
-                </div>
-              ))}
+            <div className="flex items-center gap-3 self-end sm:self-center font-sans">
+              <div className="text-right text-xs">
+                <span className="text-slate-400 block text-xs font-normal">
+                  Knowledge graph nodes
+                </span>
+                <span className="font-normal text-slate-700 text-xs">
+                  {activeGraphData.nodes.length} Nodes • {activeGraphData.edges.length} Edges
+                </span>
+              </div>
             </div>
           </div>
-        ) : (
-          !loading && (
-            <div className="bg-white border border-brand-border rounded-2xl p-12 text-center text-slate-400">
-              <Network className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-              <h3 className="text-sm font-bold text-slate-700">No Standard Graph Loaded</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-                Enter a Standard ObjectId above or click "Inspect Normative Graph" on any standard in Spec Recommender.
-              </p>
-            </div>
-          )
+        )}
+
+        {/* NORMATIVE GRAPH CANVAS MATCHING THE UPLOADED IMAGE */}
+        <NormativeGraphCanvas
+          graphData={activeGraphData}
+          selectedNode={selectedNode}
+          onSelectNode={(node) => setSelectedNode(node)}
+          onInjectClause={handleInjectClause}
+        />
+
+        {/* DRAWER FOR ADVANCED TESTING LABS & CLAUSE INJECTION IF REQUESTED */}
+        {drawerNode && (
+          <NodeInspectorDrawer
+            node={drawerNode}
+            onClose={() => setDrawerNode(null)}
+            onInjectClause={handleInjectClause}
+          />
         )}
       </div>
     </DashboardLayout>

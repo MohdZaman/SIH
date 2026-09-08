@@ -11,16 +11,16 @@ export default function NodeInspectorDrawer({ node, onClose, onInjectClause }) {
       {/* Drawer Header */}
       <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">
+          <div className="flex items-center gap-2 mb-1.5 font-sans">
+            <span className="text-xs font-medium text-brand-blue bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
               {node.type || 'Normative Reference'}
             </span>
-            <span className="text-xs font-mono text-slate-500">Level {node.level}</span>
+            <span className="text-xs text-slate-500 font-normal">Level {node.level}</span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900 leading-snug">
+          <h3 className="text-lg font-serif font-semibold text-slate-900 leading-snug">
             {node.code}
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">{node.title}</p>
+          <p className="text-xs text-slate-500 mt-0.5 font-sans font-normal">{node.title}</p>
         </div>
 
         <button
@@ -32,32 +32,32 @@ export default function NodeInspectorDrawer({ node, onClose, onInjectClause }) {
       </div>
 
       {/* Drawer Content */}
-      <div className="flex-1 p-5 overflow-y-auto space-y-5 text-xs text-slate-700">
+      <div className="flex-1 p-5 overflow-y-auto space-y-5 text-xs text-slate-700 font-sans">
         {/* Statutory Mandate */}
         <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 flex items-start gap-2.5">
           <ShieldCheck className="h-4 w-4 text-brand-blue shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold text-slate-900 block">Statutory Mandate:</span>
-            <p className="text-slate-600 mt-0.5">{node.qcoMandate || 'Mandatory Quality Control Order'}</p>
+            <span className="font-medium text-slate-900 block">Statutory Mandate:</span>
+            <p className="text-slate-600 mt-0.5 font-normal">{node.qcoMandate || 'Mandatory Quality Control Order'}</p>
           </div>
         </div>
 
         {/* Clause Scope */}
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
             <BookOpen className="h-3.5 w-3.5 text-slate-400" />
-            <span>Standard Clause Excerpt & Scope</span>
+            <span>Standard clause excerpt & scope</span>
           </h4>
-          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 font-mono text-[11px] leading-relaxed text-slate-800">
+          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs leading-relaxed text-slate-800 font-sans font-normal">
             {node.scope}
           </div>
         </div>
 
         {/* Laboratory Testing Methods */}
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5">
             <Beaker className="h-3.5 w-3.5 text-slate-400" />
-            <span>Mandatory NABL Test Methods</span>
+            <span>Mandatory NABL test methods</span>
           </h4>
           <div className="space-y-1.5">
             {node.labTestingMethods?.map((method, idx) => (
@@ -74,9 +74,9 @@ export default function NodeInspectorDrawer({ node, onClose, onInjectClause }) {
 
         {/* Accredited Test Labs */}
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-medium text-slate-600 mb-2 flex items-center gap-1.5 font-sans">
             <Building2 className="h-3.5 w-3.5 text-slate-400" />
-            <span>Accredited Test Laboratories</span>
+            <span>Accredited test laboratories</span>
           </h4>
           <div className="space-y-1.5">
             {node.accreditedLabs?.map((lab, idx) => (

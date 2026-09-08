@@ -1,57 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Layers,
-  Info,
+  Share2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import Badge from '../common/Badge';
 
 export default function NormativeGraphCanvas({
   graphData,
   selectedNode,
   onSelectNode,
+  onInjectClause,
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const [filters, setFilters] = useState({
-    safety: true,
-    testMethods: true,
-    qco: true,
-  });
+  // Node Dragging State
+  const [draggingNodeId, setDraggingNodeId] = useState(null);
+  const [nodeOffset, setNodeOffset] = useState({ x: 0, y: 0 });
+  const [customNodePositions, setCustomNodePositions] = useState({});
 
-  const rootNode = graphData?.rootNode;
+  const containerRef = useRef(null);
+
   const nodes = graphData?.nodes || [];
+  const edges = graphData?.edges || [];
+  const standard = graphData?.standard;
 
-  const NODE_POSITIONS = {
-    'IS-10322-P5': { x: 460, y: 200, width: 220, height: 90 },
-    'IS-302-1': { x: 200, y: 90, width: 190, height: 80 },
-    'IS-15885-2-13': { x: 720, y: 90, width: 190, height: 80 },
-    'IS-1608': { x: 90, y: 320, width: 180, height: 80 },
-    'IS-9000': { x: 310, y: 320, width: 180, height: 80 },
-    'IS-12063': { x: 610, y: 320, width: 180, height: 80 },
-    'IS-16103': { x: 830, y: 320, width: 180, height: 80 },
+  // Auto-select root node if none selected
+  useEffect(() => {
+    if (!selectedNode && nodes.length > 0) {
+      const root = nodes.find((n) => n.isRoot) || nodes[0];
+      if (root && onSelectNode) {
+        onSelectNode(root);
+      }
+    }
+  }, [graphData, selectedNode, nodes, onSelectNode]);
+
+  // Reset custom node positions when graph standard changes
+  useEffect(() => {
+    setCustomNodePositions({});
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [standard?.code, standard?._id]);
+
+  // Get effective position of a node (custom dragged or initial)
+  const getNodePos = (node) => {
+    if (!node) return { x: 400, y: 240 };
+    if (customNodePositions[node.id]) {
+      return customNodePositions[node.id];
+    }
+    return { x: node.x ?? 400, y: node.y ?? 240 };
   };
 
-  const handleMouseDown = (e) => {
-    if (e.target.closest('.node-element') || e.target.closest('.hud-element')) return;
-    setIsDragging(true);
+  // Canvas Pan Handlers
+  const handleCanvasMouseDown = (e) => {
+    // If clicking a node or HUD button, don't drag canvas
+    if (e.target.closest('.interactive-node') || e.target.closest('.hud-control')) {
+      return;
+    }
+    setIsDraggingCanvas(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    if (draggingNodeId) {
+      const containerRect = containerRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
+      const mouseX = (e.clientX - containerRect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - containerRect.top - pan.y) / zoom;
+
+      setCustomNodePositions((prev) => ({
+        ...prev,
+        [draggingNodeId]: {
+          x: Math.round(mouseX - nodeOffset.x),
+          y: Math.round(mouseY - nodeOffset.y),
+        },
+      }));
+      return;
+    }
+
+    if (isDraggingCanvas) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
   };
 
-  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseUp = () => {
+    setIsDraggingCanvas(false);
+    setDraggingNodeId(null);
+  };
 
   const handleZoom = (delta) => {
-    setZoom((prev) => Math.max(0.6, Math.min(1.8, prev + delta)));
+    setZoom((prev) => Math.max(0.4, Math.min(2.2, Number((prev + delta).toFixed(2)))));
   };
 
   const resetView = () => {
@@ -59,236 +105,360 @@ export default function NormativeGraphCanvas({
     setPan({ x: 0, y: 0 });
   };
 
+  const handleNodeMouseDown = (e, node) => {
+    e.stopPropagation();
+    const pos = getNodePos(node);
+    const containerRect = containerRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
+    const mouseX = (e.clientX - containerRect.left - pan.x) / zoom;
+    const mouseY = (e.clientY - containerRect.top - pan.y) / zoom;
+
+    setDraggingNodeId(node.id);
+    setNodeOffset({
+      x: mouseX - pos.x,
+      y: mouseY - pos.y,
+    });
+
+    if (onSelectNode) {
+      onSelectNode(node);
+    }
+  };
+
+  // Bottom scrubber horizontal panning
+  const handleScrubberChange = (e) => {
+    const val = Number(e.target.value);
+    // map 0..100 to pan -300..300
+    const newPanX = -((val - 50) * 6);
+    setPan((prev) => ({ ...prev, x: newPanX }));
+  };
+
+  const scrubberVal = Math.round(50 - pan.x / 6);
+
+  // Node Color & Style Resolver according to the uploaded screenshot
+  const getNodeStyle = (node) => {
+    const isSelected = selectedNode?.id === node.id;
+
+    if (node.isRoot) {
+      // Bold Central Node: vibrant blue with dark navy/black border
+      return {
+        fill: '#1D4ED8', // Vibrant blue
+        stroke: '#0F172A', // Dark navy/black thick ring
+        strokeWidth: isSelected ? 5 : 4,
+        titleColor: '#FFFFFF',
+        subtitleColor: '#BFDBFE',
+        filter: isSelected ? 'drop-shadow(0 0 10px rgba(29, 78, 216, 0.6))' : 'none',
+      };
+    }
+
+    if (node.id === 'fe-500d' || node.category === 'obligation' && node.nodeType === 'material_rule') {
+      // Light green/mint for Material rule
+      return {
+        fill: '#DCFCE7',
+        stroke: isSelected ? '#10B981' : '#86EFAC',
+        strokeWidth: isSelected ? 3 : 2,
+        titleColor: '#065F46',
+        subtitleColor: '#047857',
+        filter: isSelected ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.4))' : 'none',
+      };
+    }
+
+    if (node.id === 'qco-2024' || node.nodeType === 'qco' || node.category === 'obligation' && node.sublabel?.includes('QCO')) {
+      // Soft light-yellow/gold for QCO / Order
+      return {
+        fill: '#FEF3C7',
+        stroke: isSelected ? '#D97706' : '#FDE047',
+        strokeWidth: isSelected ? 3 : 2,
+        titleColor: '#78350F',
+        subtitleColor: '#B45309',
+        filter: isSelected ? 'drop-shadow(0 0 8px rgba(217, 119, 6, 0.35))' : 'none',
+      };
+    }
+
+    if (node.id === 'nabl-cert' || node.category === 'evidence') {
+      // Soft lavender/purple for Evidence
+      return {
+        fill: '#F3E8FF',
+        stroke: isSelected ? '#9333EA' : '#DDD6FE',
+        strokeWidth: isSelected ? 3 : 2,
+        titleColor: '#581C87',
+        subtitleColor: '#7E22CE',
+        filter: isSelected ? 'drop-shadow(0 0 8px rgba(147, 51, 234, 0.35))' : 'none',
+      };
+    }
+
+    if (node.id === 'clause-4-2' || node.nodeType === 'clause') {
+      // Light grayish-blue for Tender clause
+      return {
+        fill: '#E2E8F0',
+        stroke: isSelected ? '#2563EB' : '#CBD5E1',
+        strokeWidth: isSelected ? 3 : 2,
+        titleColor: '#0F172A',
+        subtitleColor: '#64748B',
+        filter: isSelected ? 'drop-shadow(0 0 8px rgba(37, 99, 235, 0.3))' : 'none',
+      };
+    }
+
+    // Default Source standard / test method: light blue
+    return {
+      fill: '#DBEAFE',
+      stroke: isSelected ? '#2563EB' : '#BFDBFE',
+      strokeWidth: isSelected ? 3 : 2,
+      titleColor: '#0F172A',
+      subtitleColor: '#64748B',
+      filter: isSelected ? 'drop-shadow(0 0 8px rgba(37, 99, 235, 0.3))' : 'none',
+    };
+  };
+
   return (
-    <div className="relative w-full h-[620px] bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden select-none">
-      {/* Background Architectural Grid for Graph */}
+    <div className="space-y-6 select-none font-sans">
+      {/* Canvas Card matching the image */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
-
-      {/* Floating HUD Controls Bar */}
-      <div className="hud-element absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2 bg-[#161B26]/90 backdrop-blur-md p-1.5 rounded-xl border border-white/10 shadow-xl">
-        <button
-          onClick={() => handleZoom(0.15)}
-          className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-          title="Zoom In"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => handleZoom(-0.15)}
-          className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-          title="Zoom Out"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </button>
-        <button
-          onClick={resetView}
-          className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
-          title="Fit to Screen"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </button>
-        <div className="h-4 w-px bg-slate-700 mx-1" />
-        <span className="text-xs font-mono text-slate-400 px-2">
-          {Math.round(zoom * 100)}%
-        </span>
-      </div>
-
-      {/* Filter Toggles on Top Right */}
-      <div className="hud-element absolute top-4 right-4 z-20 hidden sm:flex items-center gap-2 bg-[#161B26]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-xs text-slate-300 shadow-xl">
-        <Layers className="h-3.5 w-3.5 text-brand-blue mr-1" />
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.safety}
-            onChange={(e) => setFilters({ ...filters, safety: e.target.checked })}
-            className="rounded border-slate-700 bg-slate-800 text-brand-blue"
-          />
-          <span>Safety Codes</span>
-        </label>
-        <span className="text-slate-600">•</span>
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.testMethods}
-            onChange={(e) => setFilters({ ...filters, testMethods: e.target.checked })}
-            className="rounded border-slate-700 bg-slate-800 text-brand-blue"
-          />
-          <span>Test Methods</span>
-        </label>
-        <span className="text-slate-600">•</span>
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.qco}
-            onChange={(e) => setFilters({ ...filters, qco: e.target.checked })}
-            className="rounded border-slate-700 bg-slate-800 text-brand-blue"
-          />
-          <span>QCO Mandates</span>
-        </label>
-      </div>
-
-      {/* Hint Badge on Bottom Left */}
-      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 text-[11px] text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-        <Info className="h-3.5 w-3.5 text-brand-blue" />
-        <span>Click any standard node to inspect test laboratories & clauses</span>
-      </div>
-
-      {/* SVG Canvas Area */}
-      <div
-        onMouseDown={handleMouseDown}
+        ref={containerRef}
+        onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden"
+        className="relative w-full h-[540px] bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm"
+        style={{ cursor: isDraggingCanvas ? 'grabbing' : 'grab' }}
       >
+        {/* Subtle dot grid pattern on canvas */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-40"
+          style={{
+            backgroundImage: 'radial-gradient(#E2E8F0 1.2px, transparent 1.2px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        {/* TOP LEFT CONTROLS: Zoom In, Zoom Out, Fit to view */}
+        <div className="hud-control absolute top-4 left-4 z-20 flex items-center gap-2">
+          {/* Zoom In (+) */}
+          <button
+            onClick={() => handleZoom(0.15)}
+            className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Zoom In"
+            aria-label="Zoom In"
+          >
+            <ZoomIn className="h-4 w-4 stroke-[2.2]" />
+          </button>
+
+          {/* Zoom Out (-) */}
+          <button
+            onClick={() => handleZoom(-0.15)}
+            className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Zoom Out"
+            aria-label="Zoom Out"
+          >
+            <ZoomOut className="h-4 w-4 stroke-[2.2]" />
+          </button>
+
+          {/* Fit to view pill button */}
+          <button
+            onClick={resetView}
+            className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+            title="Fit to view"
+          >
+            <span>Fit to view</span>
+          </button>
+        </div>
+
+        {/* TOP RIGHT LEGEND: Source, Obligation, Evidence */}
+        <div className="hud-control absolute top-4 right-5 z-20 flex items-center gap-5 bg-white/90 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-sm text-xs font-medium text-slate-600">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" />
+            <span>Source</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+            <span>Obligation</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#10B981]" />
+            <span>Evidence</span>
+          </div>
+        </div>
+
+        {/* SVG GRAPH CANVAS */}
         <svg
-          viewBox="0 0 1000 460"
-          className="w-full h-full transition-transform duration-75"
+          viewBox="0 0 1000 520"
+          className="w-full h-full pointer-events-auto"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: 'center center',
+            transition: isDraggingCanvas || draggingNodeId ? 'none' : 'transform 0.15s ease-out',
           }}
         >
+          {/* DEFINITIONS */}
           <defs>
-            <linearGradient id="link-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#2563EB" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.7" />
-            </linearGradient>
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            <filter id="shadow-selected" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#1D4ED8" floodOpacity="0.3" />
             </filter>
           </defs>
 
-          {/* Curved Cubic Bezier Links */}
-          {graphData?.links?.map((link, idx) => {
-            const src = NODE_POSITIONS[link.source];
-            const tgt = NODE_POSITIONS[link.target];
-            if (!src || !tgt) return null;
+          {/* EDGES / CONNECTING LINKS */}
+          <g className="edges-layer">
+            {edges.map((edge) => {
+              const srcNode = nodes.find((n) => n.id === edge.source);
+              const tgtNode = nodes.find((n) => n.id === edge.target);
+              if (!srcNode || !tgtNode) return null;
 
-            const x1 = src.x + src.width / 2;
-            const y1 = src.y + src.height / 2;
-            const x2 = tgt.x + tgt.width / 2;
-            const y2 = tgt.y + tgt.height / 2;
+              const p1 = getNodePos(srcNode);
+              const p2 = getNodePos(tgtNode);
 
-            const dx = (x2 - x1) * 0.5;
-            const dy = (y2 - y1) * 0.5;
-            const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+              // Calculate angle and midpoint
+              const midX = (p1.x + p2.x) / 2;
+              const midY = (p1.y + p2.y) / 2;
 
-            return (
-              <g key={idx}>
-                <path
-                  d={pathData}
-                  fill="none"
-                  stroke="rgba(37, 99, 235, 0.4)"
-                  strokeWidth="2.5"
-                  strokeDasharray="4 4"
-                />
-                {/* Edge relationship label */}
-                <text
-                  x={(x1 + x2) / 2}
-                  y={(y1 + y2) / 2 - 6}
-                  fill="#94A3B8"
-                  fontSize="10"
-                  fontFamily="sans-serif"
-                  textAnchor="middle"
-                  className="bg-slate-900"
+              const isEdgeHighlighted =
+                selectedNode?.id === edge.source || selectedNode?.id === edge.target;
+
+              return (
+                <g key={edge.id} className="edge-group">
+                  {/* Base Connecting Line */}
+                  <line
+                    x1={p1.x}
+                    y1={p1.y}
+                    x2={p2.x}
+                    y2={p2.y}
+                    stroke={isEdgeHighlighted ? '#2563EB' : '#94A3B8'}
+                    strokeWidth={isEdgeHighlighted ? '2' : '1.5'}
+                    strokeOpacity={isEdgeHighlighted ? 0.9 : 0.75}
+                    className="transition-colors duration-150"
+                  />
+
+                  {/* Edge Label Pill */}
+                  {edge.label && (
+                    <g transform={`translate(${midX}, ${midY})`}>
+                      <rect
+                        x={-(edge.label.length * 3.4 + 8)}
+                        y="-9"
+                        width={edge.label.length * 6.8 + 16}
+                        height="18"
+                        rx="9"
+                        fill="#FFFFFF"
+                        stroke={isEdgeHighlighted ? '#93C5FD' : '#E2E8F0'}
+                        strokeWidth="1"
+                        className="shadow-sm"
+                      />
+                      <text
+                        x="0"
+                        y="3.5"
+                        fill={isEdgeHighlighted ? '#1D4ED8' : '#475569'}
+                        fontSize="10"
+                        fontWeight="500"
+                        fontFamily="inherit"
+                        textAnchor="middle"
+                      >
+                        {edge.label}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+
+          {/* NODES LAYER */}
+          <g className="nodes-layer">
+            {nodes.map((node) => {
+              const pos = getNodePos(node);
+              const style = getNodeStyle(node);
+              const radius = node.radius || (node.isRoot ? 56 : 46);
+              const isSelected = selectedNode?.id === node.id;
+
+              return (
+                <g
+                  key={node.id}
+                  className="interactive-node cursor-pointer group"
+                  transform={`translate(${pos.x}, ${pos.y})`}
+                  onMouseDown={(e) => handleNodeMouseDown(e, node)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectNode) onSelectNode(node);
+                  }}
+                  style={{ filter: style.filter }}
                 >
-                  {link.label}
-                </text>
-              </g>
-            );
-          })}
+                  {/* Outer selection ring if selected */}
+                  {isSelected && (
+                    <circle
+                      r={radius + 6}
+                      fill="none"
+                      stroke="#3B82F6"
+                      strokeWidth="2.5"
+                      strokeDasharray="4 4"
+                      className="animate-spin-slow opacity-80"
+                    />
+                  )}
 
-          {/* Center Root Node */}
-          {rootNode && (
-            <g
-              className="node-element cursor-pointer group"
-              onClick={() => onSelectNode && onSelectNode(rootNode)}
-              transform={`translate(${NODE_POSITIONS[rootNode.id]?.x || 390}, ${
-                NODE_POSITIONS[rootNode.id]?.y || 190
-              })`}
-            >
-              {/* Outer Glowing Border */}
-              <rect
-                width={NODE_POSITIONS[rootNode.id]?.width || 220}
-                height={NODE_POSITIONS[rootNode.id]?.height || 90}
-                rx="14"
-                fill="#1E293B"
-                stroke="#2563EB"
-                strokeWidth={selectedNode?.id === rootNode.id ? '3' : '2'}
-                filter="url(#glow)"
-                className="transition-all duration-150"
-              />
-              <rect
-                width={NODE_POSITIONS[rootNode.id]?.width || 220}
-                height={NODE_POSITIONS[rootNode.id]?.height || 90}
-                rx="14"
-                fill="#1E293B"
-                stroke="#3B82F6"
-                strokeWidth="1.5"
-              />
-              <text x="14" y="24" fill="#60A5FA" fontSize="9" fontWeight="bold" letterSpacing="0.05em">
-                ROOT PROCUREMENT STANDARD
-              </text>
-              <text x="14" y="44" fill="#FFFFFF" fontSize="13" fontWeight="bold">
-                IS 10322 (Part 5/Sec 3)
-              </text>
-              <text x="14" y="60" fill="#94A3B8" fontSize="10">
-                Road & Highway Streetlighting
-              </text>
-              <rect x="14" y="68" width="80" height="14" rx="4" fill="#10B981" fillOpacity="0.2" />
-              <text x="18" y="79" fill="#34D399" fontSize="8" fontWeight="bold">
-                MANDATORY QCO
-              </text>
-            </g>
-          )}
+                  {/* Main Node Circle */}
+                  <circle
+                    r={radius}
+                    fill={style.fill}
+                    stroke={style.stroke}
+                    strokeWidth={style.strokeWidth}
+                    className="transition-transform duration-150 group-hover:scale-105"
+                  />
 
-          {/* Subordinate Nodes */}
-          {nodes.map((node) => {
-            const pos = NODE_POSITIONS[node.id];
-            if (!pos) return null;
-            const isSelected = selectedNode?.id === node.id;
+                  {/* Node Label Text */}
+                  <text
+                    y={node.sublabel ? -4 : 4}
+                    fill={style.titleColor}
+                    fontSize={node.isRoot ? '15' : '13'}
+                    fontWeight="700"
+                    fontFamily="inherit"
+                    textAnchor="middle"
+                    className="select-none pointer-events-none"
+                  >
+                    {node.label}
+                  </text>
 
-            return (
-              <g
-                key={node.id}
-                className="node-element cursor-pointer"
-                onClick={() => onSelectNode && onSelectNode(node)}
-                transform={`translate(${pos.x}, ${pos.y})`}
-              >
-                <rect
-                  width={pos.width}
-                  height={pos.height}
-                  rx="10"
-                  fill="#182234"
-                  stroke={isSelected ? '#38BDF8' : '#334155'}
-                  strokeWidth={isSelected ? '2' : '1'}
-                  className="hover:stroke-blue-400 transition-colors"
-                />
-                <text x="12" y="20" fill="#94A3B8" fontSize="8" fontWeight="bold" letterSpacing="0.04em">
-                  {node.type.toUpperCase()}
-                </text>
-                <text x="12" y="38" fill="#FFFFFF" fontSize="11" fontWeight="bold">
-                  {node.code.length > 18 ? `${node.code.slice(0, 18)}...` : node.code}
-                </text>
-                <text x="12" y="52" fill="#64748B" fontSize="9">
-                  {node.title.length > 24 ? `${node.title.slice(0, 24)}...` : node.title}
-                </text>
-                <rect x="12" y="58" width="60" height="12" rx="3" fill="#2563EB" fillOpacity="0.2" />
-                <text x="15" y="67" fill="#60A5FA" fontSize="8" fontWeight="bold">
-                  {node.badge}
-                </text>
-              </g>
-            );
-          })}
+                  {/* Node Sublabel Text */}
+                  {node.sublabel && (
+                    <text
+                      y={node.isRoot ? 14 : 13}
+                      fill={style.subtitleColor}
+                      fontSize={node.isRoot ? '11' : '10'}
+                      fontWeight="400"
+                      fontFamily="inherit"
+                      textAnchor="middle"
+                      className="select-none pointer-events-none"
+                    >
+                      {node.sublabel}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
         </svg>
+
+        {/* BOTTOM HORIZONTAL SCRUBBER / SLIDER BAR */}
+        <div className="absolute bottom-3 inset-x-6 z-20 flex items-center gap-3">
+          <button
+            onClick={() => setPan((prev) => ({ ...prev, x: prev.x + 50 }))}
+            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            title="Pan Left"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <div className="relative flex-1 h-3 flex items-center">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={Math.max(0, Math.min(100, scrubberVal))}
+              onChange={handleScrubberChange}
+              className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-ew-resize accent-slate-600 hover:accent-slate-800"
+            />
+          </div>
+
+          <button
+            onClick={() => setPan((prev) => ({ ...prev, x: prev.x - 50 }))}
+            className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            title="Pan Right"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
