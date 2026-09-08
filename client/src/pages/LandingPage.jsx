@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   ArrowRight,
   Search,
@@ -10,9 +11,11 @@ import {
   ChevronRight,
   CheckCircle2,
 } from 'lucide-react';
+import SaralLogo from '../components/common/SaralLogo';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
 
   const sampleQueries = [
@@ -38,9 +41,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-2.5">
-            <Link to="/" className="text-emerald-600 font-semibold text-lg tracking-tight hover:text-emerald-700 transition-colors">
-              ManakAI
-            </Link>
+            <SaralLogo theme="emerald" size="md" asLink={true} to="/" />
             <span className="hidden sm:inline-flex items-center text-[10px] font-medium text-neutral-600 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded">
               National Compliance Grid
             </span>
@@ -67,12 +68,14 @@ export default function LandingPage() {
 
           {/* Action CTAs */}
           <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="text-xs font-medium text-neutral-700 hover:text-black transition-colors px-2 py-1.5"
-            >
-              Sign in
-            </Link>
+            {!isAuthenticated && (
+              <Link
+                to="/login"
+                className="text-xs font-medium text-neutral-700 hover:text-black transition-colors px-2 py-1.5"
+              >
+                Sign in
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
@@ -93,8 +96,8 @@ export default function LandingPage() {
           <span>Bureau of Indian Standards &amp; Mandatory QCO Intelligence</span>
         </div>
 
-        {/* Hero Title (Pure Black, Crisp Inter) */}
-        <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-neutral-950 leading-[1.15] max-w-4xl mx-auto">
+        {/* Hero Title */}
+        <h1 className="text-4xl sm:text-6xl font-serif font-semibold tracking-tight text-neutral-950 leading-[1.15] max-w-4xl mx-auto">
           The intelligence layer for Indian standards and public procurement.
         </h1>
 
@@ -118,7 +121,7 @@ export default function LandingPage() {
             to="/tender-auditor"
             className="inline-flex items-center gap-2 bg-white hover:bg-neutral-50 text-neutral-900 border border-neutral-300 hover:border-neutral-400 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors cursor-pointer shadow-xs"
           >
-            <span>Audit Tender Clauses</span>
+            <span>Analyze Tender</span>
             <ChevronRight className="h-4 w-4 text-neutral-500" />
           </Link>
         </div>
@@ -150,40 +153,16 @@ export default function LandingPage() {
           {/* Quick Filter Chips */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             <span className="text-[11px] text-neutral-500 font-normal">Common Lookups:</span>
-            {sampleQueries.map((item, idx) => (
+            {sampleQueries.map((item) => (
               <button
-                key={idx}
+                key={item.label}
                 type="button"
                 onClick={() => navigate(`/spec-recommender?q=${encodeURIComponent(item.label)}`)}
-                className="text-[11px] font-medium text-neutral-700 hover:text-emerald-700 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-2.5 py-1 rounded transition-colors cursor-pointer"
+                className="text-[11px] font-medium text-neutral-700 hover:text-emerald-700 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-2.5 py-1 rounded transition-colors cursor-pointer font-sans"
               >
-                {item.label} <span className="text-neutral-500 text-[10px]">({item.standard})</span>
+                {item.label} <span className="text-neutral-500 text-[10px] font-mono font-normal">({item.standard})</span>
               </button>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Metric Ribbon: Subtle Neutral with Emerald Highlights */}
-      <section className="border-y border-neutral-200 bg-neutral-50/70 py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-2xl sm:text-3xl font-semibold text-neutral-950 tracking-tight">28,000+</div>
-              <p className="text-xs text-neutral-600 mt-1 font-normal">BIS Standards Mapped</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-semibold text-emerald-600 tracking-tight">180+</div>
-              <p className="text-xs text-neutral-600 mt-1 font-normal">Active Gazette QCOs</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-semibold text-neutral-950 tracking-tight">100%</div>
-              <p className="text-xs text-neutral-600 mt-1 font-normal">GFR 2017 &amp; CVC Aligned</p>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-semibold text-neutral-950 tracking-tight">18+</div>
-              <p className="text-xs text-neutral-600 mt-1 font-normal">Central Depts Supported</p>
-            </div>
           </div>
         </div>
       </section>
@@ -191,10 +170,10 @@ export default function LandingPage() {
       {/* 5. Core Capabilities Grid: Minimalist White & Emerald Cards */}
       <section className="py-20 px-4 sm:px-6 max-w-6xl mx-auto" id="capabilities">
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-widest">
+          <span className="text-xs font-medium text-emerald-600 font-sans">
             Capabilities
           </span>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-950 mt-2 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-neutral-950 mt-2 tracking-tight">
             Engineered for precision procurement
           </h2>
           <p className="text-xs sm:text-sm text-neutral-600 mt-3 font-normal leading-relaxed">
@@ -212,15 +191,15 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                 <BookOpen className="h-4 w-4" />
               </div>
-              <h3 className="text-base font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
-                Specification Recommender
+              <h3 className="text-base font-serif font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
+                Search Standards
               </h3>
               <p className="text-xs text-neutral-600 mt-2 font-normal leading-relaxed">
                 Translate colloquial BoQ terms into exact Bureau of Indian Standards codes with full parameter ranges, testing methods, and grade classifications.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center gap-1.5 text-xs font-medium text-emerald-600 group-hover:translate-x-0.5 transition-transform">
-              <span>Open Recommender</span>
+              <span>Search Standards</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </div>
           </div>
@@ -234,7 +213,7 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                 <ShieldCheck className="h-4 w-4" />
               </div>
-              <h3 className="text-base font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-base font-serif font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
                 Statutory QCO Tracker
               </h3>
               <p className="text-xs text-neutral-600 mt-2 font-normal leading-relaxed">
@@ -256,7 +235,7 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                 <FileCheck className="h-4 w-4" />
               </div>
-              <h3 className="text-base font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-base font-serif font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
                 Tender Clause Auditor
               </h3>
               <p className="text-xs text-neutral-600 mt-2 font-normal leading-relaxed">
@@ -278,7 +257,7 @@ export default function LandingPage() {
               <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                 <Network className="h-4 w-4" />
               </div>
-              <h3 className="text-base font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-base font-serif font-semibold text-neutral-950 group-hover:text-emerald-600 transition-colors">
                 Normative Knowledge Graph
               </h3>
               <p className="text-xs text-neutral-600 mt-2 font-normal leading-relaxed">
@@ -298,11 +277,11 @@ export default function LandingPage() {
         <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-6 sm:p-10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200">
             <div>
-              <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
-                Verification Workflow
+              <span className="text-xs font-medium text-emerald-700 font-sans">
+                Verification workflow
               </span>
-              <h3 className="text-lg font-semibold text-neutral-950 mt-1">
-                How ManakAI resolves procurement ambiguity
+              <h3 className="text-lg font-serif font-semibold text-neutral-950 mt-1">
+                How SARAL resolves procurement ambiguity
               </h3>
             </div>
             <button
@@ -318,10 +297,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Left: Colloquial Input (Neutral Box) */}
             <div className="bg-white rounded-xl p-5 border border-neutral-200 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-600">
-                Draft BoQ (Ambiguous &amp; Non-Compliant)
+              <span className="text-xs font-medium text-neutral-600 font-sans">
+                Draft BoQ (ambiguous &amp; non-compliant)
               </span>
-              <div className="mt-3 p-3 bg-neutral-50 rounded border border-neutral-200 text-xs text-neutral-700 font-mono">
+              <div className="mt-3 p-3 bg-neutral-50 rounded border border-neutral-200 text-xs text-neutral-700 font-sans font-normal italic leading-relaxed">
                 "Procurement of 150 MT high tensile steel rods 16mm for highway bridge girders, best commercial quality."
               </div>
               <ul className="mt-4 space-y-2 text-xs text-neutral-600">
@@ -337,14 +316,17 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Right: ManakAI Codified Result (White with Emerald Highlights) */}
+            {/* Right: SARAL Codified Result (White with Emerald Highlights) */}
             <div className="bg-white rounded-xl p-5 border border-emerald-600/40 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-semibold text-emerald-700">
-                ManakAI Codified Verification
+              <span className="text-xs font-medium text-emerald-700 font-sans">
+                SARAL codified verification
               </span>
               <div className="mt-3 p-3 bg-emerald-50/70 rounded border border-emerald-200 text-xs text-neutral-900">
-                <div className="font-semibold text-neutral-950">IS 1786:2008 (Grade Fe 500D)</div>
-                <div className="text-[11px] text-emerald-700 mt-1 font-medium">
+                <div className="font-sans text-neutral-950">
+                  <span className="font-mono font-normal text-neutral-900 bg-emerald-100/70 px-1.5 py-0.5 rounded border border-emerald-200/70">IS 1786:2008</span>
+                  <span className="font-normal text-neutral-600 text-xs ml-1.5">(Grade Fe 500D)</span>
+                </div>
+                <div className="text-[11px] text-emerald-700 mt-1.5 font-medium">
                   Mandatory QCO: Steel and Steel Products Order, Section 16
                 </div>
               </div>
@@ -366,7 +348,7 @@ export default function LandingPage() {
 
       {/* 7. Call To Action (White, Black, Emerald) */}
       <section className="py-20 px-4 sm:px-6 max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-semibold text-neutral-950 tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-neutral-950 tracking-tight">
           Ready to streamline procurement compliance?
         </h2>
         <p className="text-sm text-neutral-600 mt-3 max-w-xl mx-auto font-normal leading-relaxed">
@@ -384,7 +366,7 @@ export default function LandingPage() {
             to="/login"
             className="text-neutral-700 hover:text-black text-sm font-medium transition-colors"
           >
-            Sign in to existing account →
+            {/* Sign in to existing account → */}
           </Link>
         </div>
       </section>
@@ -393,9 +375,7 @@ export default function LandingPage() {
       <footer className="border-t border-neutral-200 py-12 bg-neutral-50/70">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-emerald-600 text-base tracking-tight">
-              ManakAI
-            </span>
+            <SaralLogo theme="emerald" size="sm" asLink={true} to="/" />
             <span className="text-xs text-neutral-300">|</span>
             <span className="text-xs text-neutral-600 font-normal">
               Standards &amp; Procurement Intelligence
@@ -418,7 +398,7 @@ export default function LandingPage() {
           </div>
 
           <div className="text-xs text-neutral-500 font-normal">
-            © {new Date().getFullYear()} ManakAI. BIS Act 2016 Compliant.
+            © {new Date().getFullYear()} SARAL. BIS Act 2016 Compliant.
           </div>
         </div>
       </footer>

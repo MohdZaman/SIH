@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Shield, ExternalLink, HelpCircle } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -61,12 +61,12 @@ export default function DashboardLayout({
 
               <div className="min-w-0">
                 {headerTitle && (
-                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-normal truncate">
+                  <h1 className="text-xl sm:text-2xl font-serif font-semibold text-slate-900 tracking-normal truncate">
                     {headerTitle}
                   </h1>
                 )}
                 {headerSubtitle && (
-                  <p className="text-xs font-normal text-slate-500 truncate hidden sm:block">
+                  <p className="text-xs font-sans font-normal text-slate-500 truncate hidden sm:block">
                     {headerSubtitle}
                   </p>
                 )}
@@ -77,13 +77,7 @@ export default function DashboardLayout({
             <div className="flex items-center gap-3 shrink-0">
               {actions}
 
-              <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-
-              {/* Verified NIC badge */}
-              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-medium">
-                <Shield className="h-3.5 w-3.5" />
-                <span>GeM Live Connected</span>
-              </div>
+              {actions && <div className="h-4 w-px bg-slate-200 hidden sm:block" />}
 
               {/* Notification icon */}
               <button

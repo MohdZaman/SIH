@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   Home,
   Users,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../../features/auth/authSlice';
+import SaralLogo from '../common/SaralLogo';
 
 export default function Sidebar({
   isOpen,
@@ -34,7 +35,7 @@ export default function Sidebar({
     },
     {
       to: '/tender-auditor',
-      label: 'Audit Tender',
+      label: 'Analyze Tender',
       icon: Users,
       badge: 'New',
     },
@@ -79,28 +80,23 @@ export default function Sidebar({
         />
       )}
 
-      {/* Main Sidebar: Drawer on mobile, Sticky Flex sibling on desktop (no overlaying page content) */}
+      {/* Main Sidebar: Drawer on mobile, Sticky Flex sibling on desktop (stays fixed while page content scrolls) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 lg:static lg:top-0 lg:h-screen lg:z-20 shrink-0 bg-[#FBFBFC] border-r border-slate-200/80 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-40 lg:sticky lg:top-0 lg:h-screen lg:z-20 shrink-0 bg-[#FBFBFC] border-r border-slate-200/80 flex flex-col transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0 shadow-2xl w-60' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[70px]' : 'lg:w-60'}`}
       >
-        {/* Header: ONLY ManakAI in green, NO black box */}
+        {/* Header: SARAL Text-Based Logo */}
         <div className={`border-b border-slate-100 flex items-center transition-all duration-300 ${
           isCollapsed ? 'p-3 flex-col justify-center gap-2' : 'px-4 py-4 justify-between'
         }`}>
-          {!isCollapsed ? (
-            <span className="font-semibold text-lg text-emerald-600 tracking-tight select-none">
-              ManakAI
-            </span>
-          ) : (
-            <span
-              className="font-bold text-base text-emerald-600 tracking-tight select-none"
-              title="ManakAI"
-            >
-              M
-            </span>
-          )}
+          <SaralLogo
+            isCollapsed={isCollapsed}
+            size={isCollapsed ? 'sm' : 'md'}
+            theme="emerald"
+            asLink={true}
+            to="/"
+          />
 
           <div className="flex items-center gap-1">
             {/* Collapse/Expand Toggle on Desktop */}
@@ -133,7 +129,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Items (No Quick actions) */}
-        <nav className="flex-1 px-2.5 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 px-2.5 py-3 space-y-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* Primary Nav */}
           {PRIMARY_NAV.map((item) => (
             <NavLink
@@ -147,7 +143,7 @@ export default function Sidebar({
                 } ${
                   isActive
                     ? 'bg-slate-100 text-slate-900 font-medium'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-normal'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
                 }`
               }
             >
@@ -189,7 +185,7 @@ export default function Sidebar({
                 } ${
                   isActive
                     ? 'bg-slate-100 text-slate-900 font-medium'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-normal'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
                 }`
               }
             >
@@ -224,7 +220,7 @@ export default function Sidebar({
                     {user?.name || 'Officer Session'}
                   </p>
                   <p className="text-[10px] text-slate-400 font-normal truncate leading-tight mt-0.5">
-                    {user?.department || 'Procurement Officer'}
+                    {user?.employeeID ? `${user.employeeID} • ${user.role || 'OFFICIAL'}` : (user?.role || 'OFFICIAL')}
                   </p>
                 </div>
               </div>
