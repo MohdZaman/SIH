@@ -98,8 +98,8 @@ export default function TenderTable({ tenders = [], onSelectTender }) {
 
       {/* Table Element */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-600">
-          <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <table className="w-full text-left text-xs text-slate-600 font-sans">
+          <thead className="bg-slate-50 border-b border-slate-200/80 text-xs font-medium text-slate-500">
             <tr>
               <th className="py-3 px-4 w-10">
                 <button
@@ -114,11 +114,11 @@ export default function TenderTable({ tenders = [], onSelectTender }) {
                   )}
                 </button>
               </th>
-              <th className="py-3 px-4">Tender Title & NIT Identifier</th>
-              <th className="py-3 px-4">Standard Coverage</th>
-              <th className="py-3 px-4">Compliance Status</th>
+              <th className="py-3 px-4">Tender title &amp; NIT identifier</th>
+              <th className="py-3 px-4">Standard coverage</th>
+              <th className="py-3 px-4">Compliance status</th>
               <th className="py-3 px-4">Reviewers</th>
-              <th className="py-3 px-4">Sector / Division</th>
+              <th className="py-3 px-4">Sector / division</th>
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -158,12 +158,12 @@ export default function TenderTable({ tenders = [], onSelectTender }) {
                     >
                       {tender.title}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                      <span className="font-mono text-slate-500 font-medium">{tender.id}</span>
+                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-sans">
+                      <span className="font-mono text-slate-500 font-normal">{tender.id}</span>
                       <span>•</span>
-                      <span>Updated {tender.updatedAt}</span>
+                      <span className="font-normal">Updated {tender.updatedAt}</span>
                       <span>•</span>
-                      <span className="text-brand-blue font-mono">{tender.isStandardCode}</span>
+                      <span className="text-slate-600 font-mono font-normal">{tender.isStandardCode}</span>
                     </div>
                   </td>
 
@@ -223,7 +223,7 @@ export default function TenderTable({ tenders = [], onSelectTender }) {
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
-                        title="Audit Tender Clauses"
+                        title="Analyze Tender Clauses"
                         onClick={() => {
                           if (onSelectTender) onSelectTender(tender);
                           navigate('/tender-auditor');
@@ -234,7 +234,15 @@ export default function TenderTable({ tenders = [], onSelectTender }) {
                       </button>
                       <button
                         title="Edit / Re-synthesize"
-                        onClick={() => navigate('/clause-studio')}
+                        onClick={() => {
+                          const tid = tender._id || tender.id;
+                          navigate(`/clause-studio?id=${tid}`, {
+                            state: {
+                              procurementId: tid,
+                              procurement: tender,
+                            },
+                          });
+                        }}
                         className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
                       >
                         <FileEdit className="h-4 w-4" />

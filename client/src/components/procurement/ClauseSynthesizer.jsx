@@ -59,23 +59,23 @@ export default function ClauseSynthesizer() {
         <div className="bg-white border border-brand-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Sliders className="h-4 w-4 text-brand-blue" />
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-base font-serif font-semibold text-slate-900">
               Procurement Clause Builder
             </h3>
           </div>
-          <p className="text-xs text-slate-500 mb-4">
+          <p className="text-xs text-slate-500 mb-4 font-sans font-normal">
             Toggle statutory parameters to instantly synthesize airtight GeM Special Terms & Conditions (STC).
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-3 font-sans">
             {/* ISI Mark Toggle */}
             <div
               onClick={() => toggleParam('isiMark')}
               className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 cursor-pointer bg-slate-50/50 select-none"
             >
               <div>
-                <span className="text-xs font-bold text-slate-800 block">Mandatory ISI Mark</span>
-                <span className="text-[11px] text-slate-500">Scheme-I BIS certification license</span>
+                <span className="text-xs font-medium text-slate-800 block">Mandatory ISI Mark</span>
+                <span className="text-[11px] text-slate-500 font-normal">Scheme-I BIS certification license</span>
               </div>
               <input
                 type="checkbox"
@@ -91,8 +91,8 @@ export default function ClauseSynthesizer() {
               className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 cursor-pointer bg-slate-50/50 select-none"
             >
               <div>
-                <span className="text-xs font-bold text-slate-800 block">NABL Test Reports</span>
-                <span className="text-[11px] text-slate-500">10kV surge immunity certificate &lt; 180 days</span>
+                <span className="text-xs font-medium text-slate-800 block">NABL Test Reports</span>
+                <span className="text-[11px] text-slate-500 font-normal">10kV surge immunity certificate &lt; 180 days</span>
               </div>
               <input
                 type="checkbox"
@@ -108,8 +108,8 @@ export default function ClauseSynthesizer() {
               className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 cursor-pointer bg-slate-50/50 select-none"
             >
               <div>
-                <span className="text-xs font-bold text-slate-800 block">Pre-dispatch TPI (RITES/EIL)</span>
-                <span className="text-[11px] text-slate-500">Mandatory physical factory inspection</span>
+                <span className="text-xs font-medium text-slate-800 block">Third Party Inspection (TPI)</span>
+                <span className="text-[11px] text-slate-500 font-normal">Pre-dispatch inspection by RITES / EIL</span>
               </div>
               <input
                 type="checkbox"
@@ -125,8 +125,8 @@ export default function ClauseSynthesizer() {
               className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 cursor-pointer bg-slate-50/50 select-none"
             >
               <div>
-                <span className="text-xs font-bold text-slate-800 block">BEE 5-Star Energy Rating</span>
-                <span className="text-[11px] text-slate-500">Bureau of Energy Efficiency verified</span>
+                <span className="text-xs font-medium text-slate-800 block">BEE Star Rating</span>
+                <span className="text-[11px] text-slate-500 font-normal">Minimum 5-Star efficiency mandatory</span>
               </div>
               <input
                 type="checkbox"
@@ -142,8 +142,8 @@ export default function ClauseSynthesizer() {
               className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 cursor-pointer bg-slate-50/50 select-none"
             >
               <div>
-                <span className="text-xs font-bold text-slate-800 block">DPIIT Make-In-India (MII)</span>
-                <span className="text-[11px] text-slate-500">Class-I Local Supplier 50% minimum content</span>
+                <span className="text-xs font-medium text-slate-800 block">DPIIT Make-In-India (MII)</span>
+                <span className="text-[11px] text-slate-500 font-normal">Class-I Local Supplier 50% minimum content</span>
               </div>
               <input
                 type="checkbox"
@@ -157,22 +157,22 @@ export default function ClauseSynthesizer() {
       </div>
 
       {/* Synthesized Output Box */}
-      <div className="lg:col-span-2 space-y-4">
+      <div className="lg:col-span-2 space-y-4 font-sans">
         <div className="bg-white border border-brand-border rounded-xl p-5 shadow-sm flex flex-col h-full justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-lg font-serif font-semibold text-slate-900">
                   Synthesized Dispute-Proof NIT Tender Clause
                 </h3>
               </div>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Airtight & CVC Compliant
+              <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60 font-sans">
+                Airtight & CVC compliant
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed tracking-wide select-all border border-slate-800">
+            <div className="p-5 rounded-xl bg-white text-slate-800 font-sans text-xs sm:text-sm leading-relaxed tracking-normal select-all border-2 border-blue-100 shadow-xs whitespace-pre-wrap">
               {generatedClause}
             </div>
 
