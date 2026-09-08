@@ -160,16 +160,16 @@ export default function CitationsEvidenceView({
                     {/* Top Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-xs sm:text-sm font-medium text-brand-blue bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                        <span className="font-mono text-xs sm:text-sm font-normal text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80">
                           {rec.code}
                         </span>
-                        <h4 className="text-xs sm:text-sm font-semibold text-slate-900">
+                        <h4 className="text-xs sm:text-sm font-medium text-slate-900 font-sans">
                           {rec.title}
                         </h4>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        <div className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-sans">
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                           <span>Relevance: {score}%</span>
                         </div>
@@ -177,33 +177,33 @@ export default function CitationsEvidenceView({
                     </div>
 
                     {/* Statutory Authority & Formal Citation Box */}
-                    <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs space-y-2">
+                    <div className="p-3.5 rounded-lg bg-white border border-slate-200 text-xs space-y-2 font-sans">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-400 font-medium">Statutory Authority:</span>
-                          <p className="font-semibold text-slate-800">
+                          <span className="text-slate-400 font-normal">Statutory Authority:</span>
+                          <p className="font-medium text-slate-800">
                             Bureau of Indian Standards (BIS) • Ministry of Consumer Affairs
                           </p>
                         </div>
                         <div>
-                          <span className="text-slate-400 font-medium">Statutory Legal Reference:</span>
-                          <p className="font-semibold text-slate-800">
+                          <span className="text-slate-400 font-normal">Statutory Legal Reference:</span>
+                          <p className="font-medium text-slate-800">
                             Section 16 & Section 29, BIS Act 2016 (Mandatory ISI Mark)
                           </p>
                         </div>
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2 text-[10px]">
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-mono">
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-sans font-medium">
                           Clause 4.1: Material Quality
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-mono">
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-sans font-medium">
                           Clause 6.2: Sampling & Batch Testing
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-mono">
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-100 font-sans font-medium">
                           Clause 8.1: ISI License & CML Number
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-100 font-mono">
+                        <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-100 font-sans font-medium">
                           DPIIT Mandatory QCO Order
                         </span>
                       </div>
@@ -325,34 +325,34 @@ export default function CitationsEvidenceView({
                         <Badge variant={typeBadgeVariant} size="sm">
                           {ev.type.replace('_', ' ')}
                         </Badge>
-                        <span className="font-mono font-bold text-slate-900">
+                        <span className="font-mono font-normal text-slate-700">
                           {stdCode}
                         </span>
                         {stdTitle && (
-                          <span className="text-slate-500 text-[11px] truncate max-w-xs sm:max-w-md">
+                          <span className="text-slate-500 text-[11px] truncate max-w-xs sm:max-w-md font-sans font-normal">
                             — {stdTitle}
                           </span>
                         )}
                       </div>
 
-                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200 shrink-0">
+                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium border border-emerald-200 shrink-0 font-sans">
                         <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        VERIFIED EVIDENCE
+                        Verified evidence
                       </span>
                     </div>
 
                     {/* Verifiable Text Quote */}
-                    <div className="p-3 bg-white rounded-lg border border-slate-200/80 font-mono text-[11px] text-slate-800 leading-relaxed">
+                    <div className="p-3 bg-white rounded-lg border border-slate-200/80 font-sans font-normal italic text-[11px] text-slate-700 leading-relaxed">
                       "{ev.text}"
                     </div>
 
                     {/* Evidence Provenance Footer */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 pt-1 font-sans">
                       <div className="flex items-center gap-3">
-                        <span>Registry Source: <strong>{source}</strong></span>
-                        {ev.clause && <span>Clause: <strong>{ev.clause}</strong></span>}
+                        <span className="font-normal">Registry Source: <strong className="font-medium text-slate-700">{source}</strong></span>
+                        {ev.clause && <span className="font-normal">Clause: <strong className="font-medium text-slate-700">{ev.clause}</strong></span>}
                       </div>
-                      <span className="font-mono text-slate-400">
+                      <span className="text-slate-400 font-normal">
                         Audit ID: {ev._id ? String(ev._id).substring(0, 10) : `ev-${idx}`}
                       </span>
                     </div>

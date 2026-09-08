@@ -53,10 +53,10 @@ export default function BoQUploader({ onFileAnalyzed, isAuditing = false }) {
           <UploadCloud className="h-6 w-6" />
         </div>
 
-        <h4 className="text-sm font-bold text-slate-800">
-          Upload Tender NIT / Schedule of Requirements (BoQ)
+        <h4 className="text-sm font-semibold text-slate-800 font-sans">
+          Upload tender NIT or schedule of requirements (BoQ)
         </h4>
-        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto font-sans font-normal leading-relaxed">
           Drop PDF, DOCX, or scanned tender document. AI automatically extracts clauses, standards, and line items.
         </p>
 
@@ -78,7 +78,7 @@ export default function BoQUploader({ onFileAnalyzed, isAuditing = false }) {
                 }
               }}
             />
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-xs font-semibold rounded-lg hover:bg-brand-blue-hover transition-colors shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-xs font-medium rounded-lg hover:bg-brand-blue-hover transition-colors shadow-sm font-sans">
               Browse Document
             </span>
           </label>
