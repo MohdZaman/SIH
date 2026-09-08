@@ -37,6 +37,46 @@ export const fetchStandardGraph = createAsyncThunk(
   }
 );
 
+// Flexible Graph Thunk: supports MongoDB ObjectId or Standard Code (e.g. 'IS 1786')
+export const fetchStandardGraphByCode = createAsyncThunk(
+  'standards/fetchStandardGraphByCode',
+  async ({ code, depth = 1 }, { rejectWithValue }) => {
+    try {
+      const cleanCode = (code || '').trim();
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(cleanCode);
+      if (isObjectId) {
+        return await apiClient.get(`/standard/${cleanCode}/graph?depth=${depth}`);
+      }
+
+      // Search standard in database first
+      const searchRes = await apiClient.get(`/standard/search?q=${encodeURIComponent(cleanCode)}`);
+      const matched = searchRes?.standards?.find(
+        (s) => s.code?.toLowerCase().includes(cleanCode.toLowerCase())
+      ) || searchRes?.standards?.[0];
+
+      if (matched && matched._id) {
+        const graphRes = await apiClient.get(`/standard/${matched._id}/graph?depth=${depth}`);
+        return {
+          ...graphRes,
+          standard: matched,
+        };
+      }
+
+      return {
+        success: true,
+        standard: {
+          code: cleanCode,
+          title: `Indian Standard ${cleanCode}`,
+        },
+        depth,
+        graph: { nodes: [], edges: [] },
+      };
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to fetch standard graph');
+    }
+  }
+);
+
 // POST /api/standard
 export const createNewStandard = createAsyncThunk(
   'standards/createNewStandard',
@@ -103,7 +143,16 @@ const standardSlice = createSlice({
         state.loading = false;
         state.standardGraph = action.payload;
       })
-      .addCase(fetchStandardGraph.rejected, (state, action) => {
+      // Graph by Code
+      .addCase(fetchStandardGraphByCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchStandardGraphByCode.fulfilled, (state, action) => {
+        state.loading = false;
+        state.standardGraph = action.payload;
+      })
+      .addCase(fetchStandardGraphByCode.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

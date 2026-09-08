@@ -7,34 +7,34 @@ export default function CorrelatedTable({ standards = [] }) {
     <div className="bg-white border border-brand-border rounded-xl shadow-sm overflow-hidden">
       <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">
+          <h3 className="text-base font-serif font-semibold text-slate-900">
             Correlated Technical Standards & Subassemblies
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 font-sans font-normal">
             Component standards required for full BoQ technical compliance
           </p>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md">
+        <span className="text-xs font-medium px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md font-sans">
           {standards.length} Subordinate Standards
         </span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <table className="w-full text-left text-xs font-sans">
+          <thead className="bg-slate-50 border-b border-slate-200/80 text-xs font-medium text-slate-500">
             <tr>
-              <th className="py-3 px-4">Standard Number</th>
-              <th className="py-3 px-4">Title & Scope</th>
-              <th className="py-3 px-4">Correlation Relevance</th>
-              <th className="py-3 px-4">Subsystem Category</th>
-              <th className="py-3 px-4">Compliance Scheme</th>
+              <th className="py-3 px-4">Standard number</th>
+              <th className="py-3 px-4">Title & scope</th>
+              <th className="py-3 px-4">Correlation relevance</th>
+              <th className="py-3 px-4">Subsystem category</th>
+              <th className="py-3 px-4">Compliance scheme</th>
               <th className="py-3 px-4 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {standards.map((item, idx) => (
               <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                <td className="py-3.5 px-4 font-mono font-normal text-slate-700 whitespace-nowrap">
                   {item.code}
                 </td>
                 <td className="py-3.5 px-4 font-medium text-slate-700 max-w-xs">
